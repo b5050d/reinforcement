@@ -1,5 +1,4 @@
-import numpy as np
+import random
 
-for i in range(40):
-    ans = np.random.randint(0,2)
-    print(ans)
+a = 1
+print(int(not a))
