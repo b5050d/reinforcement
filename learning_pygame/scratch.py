@@ -1,0 +1,86 @@
+import pygame
+import sys
+import numpy as np
+
+
+
+def find_euclidean_distance(point_a, point_b):
+    return np.linalg.norm(point_a - point_b)
+
+# Constants
+WIDTH, HEIGHT = 300, 300
+GREEN = (0, 200, 0)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+PLAYER_RADIUS = 5
+PLAYER_POS = [WIDTH // 2, HEIGHT // 2]
+PLAYER_SPEED = .05
+
+# Pick a random
+foods = []
+for i in range(10):
+    stop_condition = False
+    while not stop_condition:
+        rand_pos_height = np.random.randint(20, HEIGHT- 20)
+        rand_pos_width = np.random.randint(20, WIDTH - 20)
+        rand_pos = np.array([rand_pos_width, rand_pos_height])
+        if not any(np.array_equal(rand_pos, existing) for existing in foods):
+            stop_condition=True
+            foods.append(rand_pos)
+
+# Initialize Pygame
+pygame.init()
+
+# Setup display
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Arena")
+
+# Game loop
+cooldown = 0
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+    # Handle keypresses
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_w]:
+        PLAYER_POS[1] -= PLAYER_SPEED
+    if keys[pygame.K_s]:
+        PLAYER_POS[1] += PLAYER_SPEED
+    if keys[pygame.K_a]:
+        PLAYER_POS[0] -= PLAYER_SPEED
+    if keys[pygame.K_d]:
+        PLAYER_POS[0] += PLAYER_SPEED
+
+    if keys[pygame.K_x]:
+        if cooldown == 0:
+            print(PLAYER_POS)
+            cooldown+=600
+
+    # Fill background
+    screen.fill(GREEN)
+
+    # Draw player
+    pygame.draw.circle(screen, RED, PLAYER_POS, PLAYER_RADIUS)
+
+    # # Place some food there
+    to_del = []
+    for i, f in enumerate(foods):
+        if find_euclidean_distance(f, np.array(PLAYER_POS)) < 5:
+            print("Found the food")
+            to_del.append(i)
+    
+    for i in to_del:
+        foods.pop(i)
+
+    for f in foods:
+        pygame.draw.circle(screen, YELLOW, f, 5)
+
+
+    # Update display
+    pygame.display.flip()
+
+    if cooldown>0:
+        cooldown=cooldown-1

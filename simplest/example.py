@@ -24,7 +24,6 @@ Q(s, a) = Q(s, a) + alpha(reward - Q(s, a))
 
 """
 
-
 class Environment():
     def __init__(self):
         self.state = 0
@@ -63,37 +62,46 @@ class Player():
         """
         Q update
         """
-        print(f"State: {state}")
-        print(f"Action: {action}")
-        print(f"Reward: {reward}")
-
         og = self.q_table[state][action]
         self.q_table[state][action] = og + (ALPHA*(reward - og))
 
 
-if __name__ == "__main__":
-    player = Player()
-    env = Environment()
+class Training:
+    """
+    Class to handle the training of our unit
+    """
+    def __init__(self):
+        self.player = Player()
+        self.env = Environment()
+        self.rewards = []
 
-    rewards = []
+        self.num_models = 5
+        self.num_steps = 20
     
-    for i in range(20):
-        # Alright lets train
+    def train(self):
+        """
+        Train a model
+        """
+        for i in range(self.num_steps):
+            state = self.env.get_new_state()
+            action = self.player.make_action(state)
+            reward = self.env.perform_action(action)
+            self.player.q_update(state, action, reward)
+            self.rewards.append(reward)
+        
+if __name__ == "__main__":
+    """
+    Run a few rounds of training to see how they converge
+    """
+    for i in range(5):
+        train = Training()
+        train.train()
+        
+        plt.plot(train.rewards)
 
-        state = env.get_new_state()
-        print(f"State: {state}")
-
-        action = player.make_action(state)
-        print(f"Action: {action}")
-
-        reward = env.perform_action(action)
-        print(f"Reward: {reward}")
-
-        player.q_update(state, action, reward)
-
-        rewards.append(reward)
-
-    print(player.q_table)
-
-    plt.plot(rewards)
+    plt.grid()
+    plt.title("Rewards per Round (Over 5 Models)")
+    plt.xlabel("Round")
+    plt.ylabel("Reward Earned in Round")
+    # plt.savefig("simplest_peformance1.png")
     plt.show()
