@@ -1,7 +1,17 @@
+"""
+Written by b5050d
+7.1.2025
+
+Basic Pygame
+
+"""
+
 import pygame
 import sys
 import numpy as np
+import time
 
+sprite_path = r"C:\Users\b5050d\Workspace\reinforcement\learning_pygame\sprite.png"
 
 
 def find_euclidean_distance(point_a, point_b):
@@ -35,8 +45,14 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Arena")
 
+# Load sprite
+player_image = pygame.image.load(sprite_path).convert_alpha()
+player_rect = player_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+
+
 # Game loop
 cooldown = 0
+start_time = time.time()
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -59,11 +75,15 @@ while True:
             print(PLAYER_POS)
             cooldown+=600
 
+
+
     # Fill background
     screen.fill(GREEN)
 
     # Draw player
-    pygame.draw.circle(screen, RED, PLAYER_POS, PLAYER_RADIUS)
+    # pygame.draw.circle(screen, RED, PLAYER_POS, PLAYER_RADIUS)
+    player_rect.center = (int(PLAYER_POS[0]), int(PLAYER_POS[1]))
+    screen.blit(player_image, player_rect)
 
     # # Place some food there
     to_del = []
@@ -78,9 +98,18 @@ while True:
     for f in foods:
         pygame.draw.circle(screen, YELLOW, f, 5)
 
+    if len(foods) == 0:
+        print("You Win!")
+        break
 
     # Update display
     pygame.display.flip()
 
     if cooldown>0:
         cooldown=cooldown-1
+
+end_time = time.time()
+elapsed = round(end_time - start_time,3)
+
+print(f"The time taken for you was: {elapsed}")
+print("Game Over!")
