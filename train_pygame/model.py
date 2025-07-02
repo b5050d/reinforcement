@@ -11,12 +11,13 @@ import torch.optim as optim
 import random
 from collections import deque
 
+
+sprite_path = r"C:\Users\b5050d\Workspace\reinforcement\learning_pygame\sprite.png"
+
 def find_euclidean_distance(point_a, point_b):
     point_a = np.array(point_a)
     point_b = np.array(point_b)
     return np.linalg.norm(point_a - point_b)
-
-
 
 ARENA_SIZE = 300
 WIDTH, HEIGHT = ARENA_SIZE, ARENA_SIZE
@@ -55,6 +56,7 @@ def encode_foods(player_x, player_y, foods):
         foods_array.append(fpos[1])
         foods_array.append(foods[fpos])    
     return np.array(foods_array, dtype=np.uint16)
+
 
 class Environment():
     def __init__(self):
@@ -100,8 +102,78 @@ class Environment():
             reward = 10 # won the game! give a big reward
         return obs, reward, done
 
-    def render(self):
-        pass
+    def render(self, render = False):
+        self.reset()
+
+        # Render the environment so the user can play
+        pygame.init()
+
+        # Setup display
+        screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption("Arena")
+
+        # Load sprite
+        player_image = pygame.image.load(sprite_path).convert_alpha()
+        player_rect = player_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+
+        # Game loop
+        cooldown = 0
+        start_time = time.time()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            # Handle keypresses
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_w]:
+                # PLAYER_POS[1] -= PLAYER_SPEED
+                o, r, d = self.step(0)
+            if keys[pygame.K_s]:
+                # PLAYER_POS[1] += PLAYER_SPEED
+                o, r, d = self.step(2)
+            if keys[pygame.K_a]:
+                # PLAYER_POS[0] -= PLAYER_SPEED
+                o, r, d = self.step(1)
+            if keys[pygame.K_d]:
+                # PLAYER_POS[0] += PLAYER_SPEED
+                o, r, d = self.step(3)
+
+            if keys[pygame.K_x]:
+                if cooldown == 0:
+                    print(PLAYER_POS)
+                    cooldown+=600
+
+            # Fill background
+            screen.fill(GREEN)
+
+            # Draw player
+            # pygame.draw.circle(screen, RED, PLAYER_POS, PLAYER_RADIUS)
+            player_rect.center = (int(self.player_pos[0]), int(self.player_pos[1]))
+            screen.blit(player_image, player_rect)
+
+            for f in self.foods:
+                if self.foods[f] == 1:
+                    pygame.draw.circle(screen, YELLOW, f, 5)
+
+            if d:
+                print("Finished game!")
+                break
+
+            # Update display
+            pygame.display.flip()
+
+            if cooldown>0:
+                cooldown=cooldown-1
+
+            clock.tick(FPS)
+
+        end_time = time.time()
+        elapsed = round(end_time - start_time,3)
+
+        print(f"The time taken for you was: {elapsed}")
+        print("Game Over!")
 
 
 class DQN(nn.Module):
@@ -118,11 +190,6 @@ class DQN(nn.Module):
     def forward(self, x):
         return self.model(x)
     
-
-
-
-
-
 
 if __name__ == "__main__":
     env = Environment()
@@ -142,6 +209,7 @@ if __name__ == "__main__":
     episodes = 500
 
     for ep in range(episodes):
+        print(f"Beginning Episode: {ep}")
         state = env.reset()
         total_reward = 0
 
@@ -165,4 +233,26 @@ if __name__ == "__main__":
                 batch = random.sample(replay_buffer, batch_size)
                 s, a, r, s2, d = zip(*batch)
 
-                #TODO - continue with the training!
+                s = torch.tensor(s, dtype=torch.float32)
+                a = torch.tensor(a)
+                r = torch.tensor(r, dtype=torch.float32)
+                s2 = torch.tensor(s2, dtype=torch.float32)
+                d = torch.tensor(d, dtype=torch.float32)
+
+                qvals = nnet(s)
+                qval = qvals.gather(1, a.unsqueeze(1)).squeeze()
+
+                with torch.no_grad():
+                    max_q_s2 = nnet(s2).max(1)[0]
+                    target = r + gamma * max_q_s2 * (1 - d)
+
+                loss = loss_fn(qval, target)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+            if done:
+                break
+
+        epsilon = max(epsilon_min, epsilon * epsilon_decay)
+        print(f"Episode {ep}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")
