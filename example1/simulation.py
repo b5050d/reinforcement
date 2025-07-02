@@ -27,9 +27,9 @@ class Board():
         self.light_looking_left = []
         self.light_looking_right = []
 
-        for i in range(0, 11):
-            if self.light_location == "left":
-                self.light_looking_right += 
+        # for i in range(0, 11):
+        #     if self.light_location == "left":
+        #         self.light_looking_right += 
 
 class Player():
     def __init__(self):

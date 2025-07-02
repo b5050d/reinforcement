@@ -18,13 +18,18 @@ def find_euclidean_distance(point_a, point_b):
     return np.linalg.norm(point_a - point_b)
 
 # Constants
+
+arena_size = 100
 WIDTH, HEIGHT = 300, 300
 GREEN = (0, 200, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 PLAYER_RADIUS = 5
 PLAYER_POS = [WIDTH // 2, HEIGHT // 2]
-PLAYER_SPEED = .05
+PLAYER_SPEED = 1
+
+FPS = 120
+clock = pygame.time.Clock()
 
 # Pick a random
 foods = []
@@ -48,7 +53,6 @@ pygame.display.set_caption("Arena")
 # Load sprite
 player_image = pygame.image.load(sprite_path).convert_alpha()
 player_rect = player_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-
 
 # Game loop
 cooldown = 0
@@ -74,8 +78,6 @@ while True:
         if cooldown == 0:
             print(PLAYER_POS)
             cooldown+=600
-
-
 
     # Fill background
     screen.fill(GREEN)
@@ -107,6 +109,8 @@ while True:
 
     if cooldown>0:
         cooldown=cooldown-1
+
+    clock.tick(FPS)
 
 end_time = time.time()
 elapsed = round(end_time - start_time,3)
