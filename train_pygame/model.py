@@ -102,7 +102,7 @@ class Environment():
             reward = 10 # won the game! give a big reward
         return obs, reward, done
 
-    def render(self, render = False):
+    def play(self, render = False):
         self.reset()
 
         # Render the environment so the user can play
@@ -127,6 +127,9 @@ class Environment():
 
             # Handle keypresses
             keys = pygame.key.get_pressed()
+            d = False
+            r = 0
+
             if keys[pygame.K_w]:
                 # PLAYER_POS[1] -= PLAYER_SPEED
                 o, r, d = self.step(0)
@@ -175,6 +178,99 @@ class Environment():
         print(f"The time taken for you was: {elapsed}")
         print("Game Over!")
 
+    def render(self, foods, action_history):
+        """
+        Render a game played by AI
+        """
+        self.reset() # Get the player back to the starting point
+
+        # Make all the foods active again
+        for f in self.foods:
+            self.foods[f] = 1
+
+        # Render the environment so the user can play
+        pygame.init()
+
+        # Setup display
+        screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption("Arena")
+
+        # Load sprite
+        player_image = pygame.image.load(sprite_path).convert_alpha()
+        player_rect = player_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+
+        # Game loop
+        cooldown = 0
+        start_time = time.time()
+        move_ticker = 0
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            # Handle keypresses
+            # keys = pygame.key.get_pressed()
+            d = False
+            r = 0
+
+            if move_ticker == len(action_history)-1:
+                d = True
+
+            action = action_history[move_ticker]
+            self.step(action)
+            move_ticker+=1
+            
+            # if keys[pygame.K_w]:
+            #     # PLAYER_POS[1] -= PLAYER_SPEED
+            #     o, r, d = self.step(0)
+            # if keys[pygame.K_s]:
+            #     # PLAYER_POS[1] += PLAYER_SPEED
+            #     o, r, d = self.step(2)
+            # if keys[pygame.K_a]:
+            #     # PLAYER_POS[0] -= PLAYER_SPEED
+            #     o, r, d = self.step(1)
+            # if keys[pygame.K_d]:
+            #     # PLAYER_POS[0] += PLAYER_SPEED
+            #     o, r, d = self.step(3)
+
+            # if keys[pygame.K_x]:
+            #     if cooldown == 0:
+            #         print(PLAYER_POS)
+            #         cooldown+=600
+
+            # Fill background
+            screen.fill(GREEN)
+
+            # Draw player
+            # pygame.draw.circle(screen, RED, PLAYER_POS, PLAYER_RADIUS)
+            player_rect.center = (int(self.player_pos[0]), int(self.player_pos[1]))
+            screen.blit(player_image, player_rect)
+
+            for f in self.foods:
+                if self.foods[f] == 1:
+                    pygame.draw.circle(screen, YELLOW, f, 5)
+
+            if d:
+                print("Finished game!")
+                break
+
+            # Update display
+            pygame.display.flip()
+
+            if cooldown>0:
+                cooldown=cooldown-1
+
+            clock.tick(FPS)
+
+        end_time = time.time()
+        elapsed = round(end_time - start_time,3)
+
+        print(f"The time taken for you was: {elapsed}")
+        print("Game Over!")
+
+
+
 
 class DQN(nn.Module):
     def __init__(self):
@@ -191,7 +287,7 @@ class DQN(nn.Module):
         return self.model(x)
     
 
-if __name__ == "__main__":
+def training_loop():
     env = Environment()
     ans = env.reset()
 
@@ -213,6 +309,7 @@ if __name__ == "__main__":
         state = env.reset()
         total_reward = 0
 
+        action_history = []
         for t in range(2000):
             if random.random() < epsilon:
                 action = random.randint(0, 3)
@@ -221,6 +318,8 @@ if __name__ == "__main__":
                     q_vals = nnet(torch.tensor(state, dtype=torch.float32).unsqueeze(0))
                     action = torch.argmax(q_vals).item()
             
+            action_history.append(action)
+
             next_state, reward, done = env.step(action)
             replay_buffer.append(
                 (state, action, reward, next_state, done)
@@ -256,3 +355,17 @@ if __name__ == "__main__":
 
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
         print(f"Episode {ep}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")
+
+        # Render the run
+        env.render(env.foods, action_history)
+
+def play_loop():
+    env = Environment()
+    env.reset()
+
+    env.render()
+
+
+if __name__ == "__main__":
+    # play_loop()
+    training_loop()
