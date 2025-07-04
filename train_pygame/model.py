@@ -356,14 +356,16 @@ def training_loop():
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
         print(f"Episode {ep}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")
 
-        # Render the run
-        env.render(env.foods, action_history)
+        # Render the run every 100
+        if ep%1 == 0:
+            env.render(env.foods, action_history)
+            pygame.quit()
 
 def play_loop():
     env = Environment()
     env.reset()
 
-    env.render()
+    env.play()
 
 
 if __name__ == "__main__":
