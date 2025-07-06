@@ -280,7 +280,6 @@ class Environment():
             else:
                 action = self.handle_keypresses()
 
-                print(action)
             if first_move:
                 if action != -1:
                     first_move = False

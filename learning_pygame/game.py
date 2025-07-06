@@ -36,7 +36,7 @@ foods = []
 for i in range(10):
     stop_condition = False
     while not stop_condition:
-        rand_pos_height = np.random.randint(20, HEIGHT- 20)
+        rand_pos_height = np.random.randint(20, HEIGHT - 20)
         rand_pos_width = np.random.randint(20, WIDTH - 20)
         rand_pos = np.array([rand_pos_width, rand_pos_height])
         if not any(np.array_equal(rand_pos, existing) for existing in foods):

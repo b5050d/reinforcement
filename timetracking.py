@@ -8,4 +8,5 @@ values = [
     ("20250703", "30", ""),
     ("20250704", "120", "Remade the script to handle better model input. Added saving of runs and models."),
     ("20250705", "20", "Thinking about building the next simulation"),
+    ("20250705", "300", "Working on the next simulation"),
 ]
