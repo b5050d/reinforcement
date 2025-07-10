@@ -435,8 +435,8 @@ def play_loop():
 
 
 if __name__ == "__main__":
-    # play_loop()
-    training_loop()
+    play_loop()
+    # training_loop()
     # env = Environment()
     # ans = load_ai_run(0, "test")
     # env.play(True, ans["actions"], ans["foods"])

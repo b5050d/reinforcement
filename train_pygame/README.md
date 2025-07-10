@@ -40,3 +40,23 @@ down = 4
 down right = 5
 right = 6
 up right = 7
+
+
+# Updates to make 7.8
+
+- points in vector should be arranged by closest active point first and descending from there.
+- add 2x itesm to the obs vector of absolute position (normalized)
+- Normalize all values in the vector
+    - ReLu needs this should massively improve training stability
+- Add a target network
+    - another stable network that doesnt change everytime to compare against
+- Add a continuous reward for getting closer instead of binary
+    - Only check the nearest active food
+    - Calc (last_dist - new_dist) * scale
+- make a higher epsilon decay (.995 or .997)
+- smaller batch sizes (64 or 128 works better, trains faster, more stable)
+    - also dont train until 1000 steps
+- Add evaluation loop
+    - Fixed map
+    - epsilon = 0
+
