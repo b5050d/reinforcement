@@ -33,6 +33,14 @@ PLAYER_SPEED = 1
 FPS = 120
 clock = pygame.time.Clock()
 
+def normalize_delta(span, delta):
+    print()
+    ans = (delta / (2*span)) + (.5)
+    if ans < 0:
+        return 0
+    elif ans > 1:
+        return 1
+    return ans
 
 def find_euclidean_distance(point_a, point_b):
     """
@@ -117,13 +125,49 @@ def encode_foods(player_x, player_y, foods):
     Encode the foods dictionary into an observation space
     digestible by the model
     """
-    foods_array = []
+
+    diffs_active = []
+    keys_active = []
+
+    diffs_inactive = []
+    keys_inactive = []
     for fpos in foods.keys():
+        if foods[fpos] ==  1:
+            diffs_active.append(find_euclidean_distance([player_x, player_y], fpos))
+            keys_active.append(fpos)
+        else:
+            diffs_inactive.append(find_euclidean_distance([player_x, player_y], fpos))
+            keys_inactive.append(fpos)
+    
+    sorted_pairs_active = sorted(zip(diffs_active, keys_active))
+    sorted_pairs_inactive = sorted(zip(diffs_inactive, keys_inactive))
+
+    foods_array = []
+
+    # Add the players position here
+    foods_array.append(player_x/WIDTH)
+    foods_array.append(player_y/HEIGHT)
+
+    for euc, fpos in sorted_pairs_active:
         dx, dy = find_x_y_delta([player_x, player_y], fpos)
-        foods_array.append(fpos[0])
-        foods_array.append(fpos[1])
-        foods_array.append(foods[fpos])    
-    return np.array(foods_array, dtype=np.uint16)
+        foods_array.append(normalize_delta(WIDTH, dx))
+        foods_array.append(normalize_delta(HEIGHT, dy))
+        foods_array.append(foods[fpos])
+
+    for euc, fpos in sorted_pairs_inactive:
+        dx, dy = find_x_y_delta([player_x, player_y], fpos)
+        foods_array.append(normalize_delta(WIDTH, dx))
+        foods_array.append(normalize_delta(HEIGHT, dy))
+        foods_array.append(foods[fpos])
+
+    raise NotImplementedError
+    # FORCE THE PLAYER TO STAY ON THE ARENA!
+    
+    print(foods_array)
+    assert max(foods_array) <= 1
+    assert min(foods_array) >= 0
+
+    return np.array(foods_array, dtype=np.float32)
 
 class Environment():
     """
@@ -341,23 +385,29 @@ class DQN(nn.Module):
 def training_loop():
     env = Environment()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = "cpu"
     print(f"Using device: {device}")
 
     nnet = DQN()
+    nnet_target = DQN()
     nnet.to(device)
     LEARNING_RATE = 1e-3
     optimizer = optim.Adam(nnet.parameters(), lr = LEARNING_RATE)
     loss_fn = nn.MSELoss()
 
     replay_buffer = deque(maxlen=10000)
-    batch_size = 1024
+    batch_size = 64
     gamma = .99
     epsilon = 1.0
-    epsilon_decay = .99
+    epsilon_decay = .995
     epsilon_min = .1
     episodes = 500
+
+    total_steps = 0
+
+    EVALUATION_INTERVAL = 10
+
 
     for ep in range(episodes):
         start_time = time.time()
@@ -384,7 +434,7 @@ def training_loop():
             total_reward += reward
 
             # Train
-            if len(replay_buffer) >= batch_size:
+            if (len(replay_buffer) >= batch_size) and (total_steps > 1000):
                 batch = random.sample(replay_buffer, batch_size)
                 s, a, r, s2, d = zip(*batch)
                 s = np.array(s)
@@ -411,15 +461,18 @@ def training_loop():
                 loss.backward()
                 optimizer.step()
 
+            total_steps+=1
+
             if done:
                 break
+                
 
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
         print(f"Episode {ep}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")
         print(f"Episode Run time = {round(time.time() - start_time, 3)}")
 
         # Save the run every 10
-        if ep%10 == 0:
+        if ep%EVALUATION_INTERVAL == 0:
             tag = "closer_bigbig_reward"
             save_ai_run(env.foods, action_history, ep, tag)
             save_ai_model(nnet, tag, ep)
