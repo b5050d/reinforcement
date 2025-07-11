@@ -48,7 +48,7 @@ up right = 7
 - [DONE] add 2x itesm to the obs vector of absolute position (normalized)
 - [DONE] Normalize all values in the vector
     - ReLu needs this should massively improve training stability
-- Add a target network
+- [DONE] Add a target network
     - another stable network that doesnt change everytime to compare against
 - Add a continuous reward for getting closer instead of binary
     - Only check the nearest active food

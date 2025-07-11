@@ -20,8 +20,6 @@ import pickle
 currdir = os.path.dirname(__file__)
 sprite_path = os.path.join(currdir,"sprite.png")
 
-
-
 ARENA_SIZE = 300
 WIDTH, HEIGHT = ARENA_SIZE, ARENA_SIZE
 GREEN = (0, 200, 0)
@@ -34,7 +32,6 @@ FPS = 120
 clock = pygame.time.Clock()
 
 def normalize_delta(span, delta):
-    print()
     ans = (delta / (2*span)) + (.5)
     if ans < 0:
         return 0
@@ -159,11 +156,8 @@ def encode_foods(player_x, player_y, foods):
         foods_array.append(normalize_delta(WIDTH, dx))
         foods_array.append(normalize_delta(HEIGHT, dy))
         foods_array.append(foods[fpos])
-
-    raise NotImplementedError
-    # FORCE THE PLAYER TO STAY ON THE ARENA!
     
-    print(foods_array)
+    # print(foods_array)
     assert max(foods_array) <= 1
     assert min(foods_array) >= 0
 
@@ -216,6 +210,17 @@ class Environment():
         else:
             pass
 
+        if self.player_pos[0] >= WIDTH:
+            self.player_pos[0] = WIDTH-1
+        elif self.player_pos[0] <= 0:
+            self.player_pos[0]=0
+
+        if self.player_pos[1] >= HEIGHT:
+            self.player_pos[1] = HEIGHT-1
+        elif self.player_pos[1] <= 0:
+            self.player_pos[1]=0
+
+
         reward = 0
         # Check if we are in proximity of the food
         euclids = []
@@ -226,15 +231,16 @@ class Environment():
                 if ans <= 5:
                     self.foods[f] = 0
                     reward+=1
+
         # Check if we are closer or further than last time:
         # Get the min distance
         min_euclid = min(euclids)
-        if min_euclid < self.last_min_euclid:
-            self.last_min_euclid = min_euclid
-            reward += .1
-
+        difference = min_euclid - self.last_min_euclid
+        if difference < 0:
+            reward += -.1 * difference
         if reward == 0:
             reward = -.01
+        self.last_min_euclid = min_euclid
             
         # # Encode the Foods
         obs = encode_foods(self.player_pos[0], self.player_pos[1], self.foods)
@@ -279,9 +285,6 @@ class Environment():
             action = -1
 
         return action
-
-    def handle_ai_action(self):
-        pass
 
     def play(self, ai = False, ai_history = [], ai_foods = {}):
         if ai:
@@ -390,11 +393,16 @@ def training_loop():
     print(f"Using device: {device}")
 
     nnet = DQN()
-    nnet_target = DQN()
     nnet.to(device)
     LEARNING_RATE = 1e-3
     optimizer = optim.Adam(nnet.parameters(), lr = LEARNING_RATE)
     loss_fn = nn.MSELoss()
+
+    # Set up the Target Network
+    nnet_target = DQN()
+    nnet_target.load_state_dict(nnet.state_dict())
+    nnet_target.eval()  # no gradients needed
+
 
     replay_buffer = deque(maxlen=10000)
     batch_size = 64
@@ -407,7 +415,7 @@ def training_loop():
     total_steps = 0
 
     EVALUATION_INTERVAL = 10
-
+    TARGET_UPDATE_N = 5 # Update the target network every N episodes
 
     for ep in range(episodes):
         start_time = time.time()
@@ -453,7 +461,7 @@ def training_loop():
                 qval = qvals.gather(1, a.unsqueeze(1)).squeeze()
 
                 with torch.no_grad():
-                    max_q_s2 = nnet(s2).max(1)[0]
+                    max_q_s2 = nnet_target(s2).max(1)[0]
                     target = r + gamma * max_q_s2 * (1 - d)
 
                 loss = loss_fn(qval, target)
@@ -467,17 +475,53 @@ def training_loop():
                 break
                 
 
+        if ep%TARGET_UPDATE_N == 0:  # or every N episodes or steps
+            nnet_target.load_state_dict(nnet.state_dict())
+
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
         print(f"Episode {ep}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")
         print(f"Episode Run time = {round(time.time() - start_time, 3)}")
 
         # Save the run every 10
         if ep%EVALUATION_INTERVAL == 0:
-            tag = "closer_bigbig_reward"
-            save_ai_run(env.foods, action_history, ep, tag)
-            save_ai_model(nnet, tag, ep)
+            # tag = "closer_bigbig_reward"
+            # save_ai_run(env.foods, action_history, ep, tag)
+            # save_ai_model(nnet, tag, ep)
+            run_tag = "testing"
+            evaluation_loop(run_tag, ep, nnet)
 
             pygame.quit()
+
+def evaluation_loop(run_tag, env, ep, nnet):
+    nnet.eval()
+
+    episodes = 1
+    reward = 0
+    for ep in range(episodes):
+        # Reset the env
+        env.reset_to_eval()
+        done = False
+
+        while not done:
+            with torch.no_grad():
+                state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+                q_values = model(state_tensor)
+                action = torch.argmax(q_values).item()
+
+            state, reward, done = env.step(action)
+            episode_reward += reward
+
+        total_reward += episode_reward
+
+    avg_reward = total_reward / episodes
+    print(f"[Eval] Avg reward over {episodes} eval runs: {avg_reward:.2f}")
+
+    # TODO - Save the model
+        # tag = "closer_bigbig_reward"
+    # save_ai_run(env.foods, action_history, ep, tag)
+    # save_ai_model(nnet, tag, ep)
+    nnet.train() # Set it back in training mode
+
 
 def evaluation_loop():
     pass
