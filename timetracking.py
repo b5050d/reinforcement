@@ -12,6 +12,7 @@ values = [
     ("20250705", "120", "Working on the next simulation"),
     ("20250708", "40", "Learning and structuring changes for the mid tier simulation"),
     ("20250710", "35", "Starting to implment the changes to improve trianing"),
+    ("20250711", "30", "Almost finished implementing the changes to improve training"),
 
 
 ] 

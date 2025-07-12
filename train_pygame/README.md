@@ -50,13 +50,13 @@ up right = 7
     - ReLu needs this should massively improve training stability
 - [DONE] Add a target network
     - another stable network that doesnt change everytime to compare against
-- Add a continuous reward for getting closer instead of binary
+- [DONE] Add a continuous reward for getting closer instead of binary
     - Only check the nearest active food
     - Calc (last_dist - new_dist) * scale
 - [DONE] make a higher epsilon decay (.995 or .997)
 - [DONE] smaller batch sizes (64 or 128 works better, trains faster, more stable)
     - [DONE] also dont train until 1000 steps
-- Add evaluation loop
+- [IN PROGRESS] Add evaluation loop
     - Fixed map
     - epsilon = 0
 

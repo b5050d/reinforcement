@@ -31,6 +31,7 @@ PLAYER_SPEED = 1
 FPS = 120
 clock = pygame.time.Clock()
 
+
 def normalize_delta(span, delta):
     ans = (delta / (2*span)) + (.5)
     if ans < 0:
@@ -163,6 +164,7 @@ def encode_foods(player_x, player_y, foods):
 
     return np.array(foods_array, dtype=np.float32)
 
+
 class Environment():
     """
     The Environment that runs the game
@@ -176,6 +178,29 @@ class Environment():
         """
         # Get new foods
         self.foods = get_random_foods(WIDTH, HEIGHT, 10)
+        self.player_pos = [int(WIDTH/2), int(HEIGHT/2)]
+
+        self.last_min_euclid = 999999
+        return encode_foods(self.player_pos[0], self.player_pos[1], self.foods)
+
+    def reset_to_eval(self):
+        """
+        Reset to a known evaluation state
+        """
+        # Evaluation foods (always the same for comparison purposes)
+        self.foods = {
+            (76, 257): 1,
+            (114, 238): 1,
+            (259, 185): 1,
+            (205, 202): 1,
+            (166, 199): 1,
+            (202, 271): 1,
+            (50, 258): 1,
+            (247, 144): 1,
+            (90, 157): 1,
+            (211, 270): 1
+        }
+
         self.player_pos = [int(WIDTH/2), int(HEIGHT/2)]
 
         self.last_min_euclid = 999999
@@ -236,10 +261,12 @@ class Environment():
         # Get the min distance
         min_euclid = min(euclids)
         difference = min_euclid - self.last_min_euclid
-        if difference < 0:
+        if abs(difference) > 5:
+            reward += 0 
+        elif difference < 0:
             reward += -.1 * difference
         if reward == 0:
-            reward = -.01
+            reward = -.1
         self.last_min_euclid = min_euclid
             
         # # Encode the Foods
@@ -253,6 +280,8 @@ class Environment():
                 break
         if done == True:
             reward = 10 # won the game! give a big reward
+        # print(f"Reward: {reward}")
+        # time.sleep(.1)
         return obs, reward, done
 
     def handle_keypresses(self):
@@ -292,10 +321,12 @@ class Environment():
             self.player_pos = [int(WIDTH/2), int(HEIGHT/2)]
 
             # Make all the foods active again
+            self.foods = ai_foods
             for f in self.foods:
                 self.foods[f] = 1
         else:
             self.reset()
+            # self.reset_to_eval()
 
         # Render the environment
         pygame.init()
@@ -315,6 +346,7 @@ class Environment():
         step_counter = 0
         
         stop_condition = False
+        total_reward = 0
         while not stop_condition:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -330,8 +362,11 @@ class Environment():
             if first_move:
                 if action != -1:
                     first_move = False
+                total_reward = 0
 
             next_state, reward, done = self.step(action)
+            total_reward+=reward
+            # input("pause")
 
             # Rendering Steps
             screen.fill(GREEN)
@@ -367,6 +402,7 @@ class Environment():
                 stop_condition = True
 
         print(f"The time taken for you was: {game_timer}")
+        print(f"Total Reward {total_reward}")
         print("Game Over!")
 
 
@@ -374,7 +410,7 @@ class DQN(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = nn.Sequential(
-            nn.Linear(30, 64),
+            nn.Linear(32, 64),
             nn.ReLU(),
             nn.Linear(64, 64),
             nn.ReLU(),
@@ -410,12 +446,14 @@ def training_loop():
     epsilon = 1.0
     epsilon_decay = .995
     epsilon_min = .1
-    episodes = 500
+    episodes = 100
 
     total_steps = 0
 
     EVALUATION_INTERVAL = 10
     TARGET_UPDATE_N = 5 # Update the target network every N episodes
+
+    run_tag = "20250712first"
 
     for ep in range(episodes):
         start_time = time.time()
@@ -487,44 +525,50 @@ def training_loop():
             # tag = "closer_bigbig_reward"
             # save_ai_run(env.foods, action_history, ep, tag)
             # save_ai_model(nnet, tag, ep)
-            run_tag = "testing"
-            evaluation_loop(run_tag, ep, nnet)
+            evaluation_loop(run_tag, env, ep, nnet)
 
             pygame.quit()
 
+
 def evaluation_loop(run_tag, env, ep, nnet):
+    print("Running Evaluation Loop")
     nnet.eval()
 
     episodes = 1
-    reward = 0
-    for ep in range(episodes):
+    total_reward = 0
+    for epi in range(episodes):
         # Reset the env
-        env.reset_to_eval()
+        state = env.reset_to_eval()
         done = False
 
-        while not done:
+        action_history = []
+        ep_reward = 0
+        # while not done:
+        for t in range(2000):
             with torch.no_grad():
                 state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-                q_values = model(state_tensor)
+                q_values = nnet(state_tensor)
                 action = torch.argmax(q_values).item()
-
+            action_history.append(action)
             state, reward, done = env.step(action)
-            episode_reward += reward
+            ep_reward += reward
+            if done:
+                break
 
-        total_reward += episode_reward
+        total_reward += ep_reward
 
     avg_reward = total_reward / episodes
     print(f"[Eval] Avg reward over {episodes} eval runs: {avg_reward:.2f}")
 
     # TODO - Save the model
-        # tag = "closer_bigbig_reward"
-    # save_ai_run(env.foods, action_history, ep, tag)
-    # save_ai_model(nnet, tag, ep)
+    print("Information for saving model:")
+    print(f"Ep: {ep}")
+    print(f"run tag: {run_tag}")
+    save_ai_run(env.foods, action_history, ep, run_tag)
+    save_ai_model(nnet, run_tag, ep)
+
     nnet.train() # Set it back in training mode
 
-
-def evaluation_loop():
-    pass
 
 def play_loop():
     env = Environment()
@@ -532,204 +576,8 @@ def play_loop():
 
 
 if __name__ == "__main__":
-    play_loop()
-    # training_loop()
-    # env = Environment()
-    # ans = load_ai_run(0, "test")
-    # env.play(True, ans["actions"], ans["foods"])
+    # Play the game as a human
+    # play_loop()
 
-
-
-
-    # def play_human(self, render = False):
-    #     """
-    #     Play (as a human)
-    #     """
-    #     self.reset()
-
-    #     # Render the environment so the user can play
-    #     pygame.init()
-
-    #     # set up the display clock
-    #     font = pygame.font.SysFont(None, 36)
-
-    #     # Setup display
-    #     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    #     pygame.display.set_caption("Arena")
-
-    #     # Load sprite
-    #     player_image = pygame.image.load(sprite_path).convert_alpha()
-    #     player_rect = player_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-
-    #     # Game loop
-    #     cooldown = 0
-    #     first_move = True
-    #     timer_clock_val = 0
-
-    #     timer_clock_val
-    #     # x = 3.1415926
-    #     # print(f"{x:.3f}")
-    #     while True:
-    #         for event in pygame.event.get():
-    #             if event.type == pygame.QUIT:
-    #                 pygame.quit()
-    #                 sys.exit()
-
-    #         # Handle keypresses
-    #         keys = pygame.key.get_pressed()
-    #         d = False
-    #         r = 0
-
-    #         if keys[pygame.K_w]:
-    #             # PLAYER_POS[1] -= PLAYER_SPEED
-    #             o, r, d = self.step(0)
-    #         if keys[pygame.K_s]:
-    #             # PLAYER_POS[1] += PLAYER_SPEED
-    #             o, r, d = self.step(2)
-    #         if keys[pygame.K_a]:
-    #             # PLAYER_POS[0] -= PLAYER_SPEED
-    #             o, r, d = self.step(1)
-    #         if keys[pygame.K_d]:
-    #             # PLAYER_POS[0] += PLAYER_SPEED
-    #             o, r, d = self.step(3)
-
-    #         if first_move:
-    #             print("Encountered the first move")
-    #             if keys[pygame.K_w] or keys[pygame.K_a] or keys[pygame.K_s] or keys[pygame.K_d]:
-    #                 first_move = False
-    #                 first_move += 1/FPS
-    #         else:
-    #             first_move += 1/FPS
-            
-
-    #         if keys[pygame.K_x]:
-    #             if cooldown == 0:
-    #                 print(PLAYER_POS)
-    #                 cooldown+=600
-
-    #         # Fill background
-    #         screen.fill(GREEN)
-
-    #         # Draw player
-    #         # pygame.draw.circle(screen, RED, PLAYER_POS, PLAYER_RADIUS)
-    #         player_rect.center = (int(self.player_pos[0]), int(self.player_pos[1]))
-    #         screen.blit(player_image, player_rect)
-
-    #         for f in self.foods:
-    #             if self.foods[f] == 1:
-    #                 pygame.draw.circle(screen, YELLOW, f, 5)
-
-    #         if d:
-    #             print("Finished game!")
-    #             break
-
-    #         # Handle the Timer Clock
-    #         timer_string = print(f"{timer_clock_val:.3f}")
-    #         text_clock = font.render(timer_string, True, (255, 0, 0)) 
-    #         text_rect = text_clock.get_rect(topright=(WIDTH-10, 10))
-        
-    #         screen.blit(text_clock,text_rect)
-
-    #         # Update display
-    #         pygame.display.flip()
-
-    #         if cooldown>0:
-    #             cooldown=cooldown-1
-
-    #         clock.tick(FPS)
-
-    #     print(f"The time taken for you was: {timer_clock_val}")
-    #     print("Game Over!")
-
-    # def render(self, foods, action_history):
-    #     """
-    #     Render a game played by AI
-    #     """
-    #     # Get the player back to the starting point
-    #     self.player_pos = [int(WIDTH/2), int(HEIGHT/2)]
-
-    #     # Make all the foods active again
-    #     for f in self.foods:
-    #         self.foods[f] = 1
-
-    #     # Render the environment so the user can play
-    #     pygame.init()
-
-    #     # Setup display
-    #     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    #     pygame.display.set_caption("Arena")
-
-    #     # Load sprite
-    #     player_image = pygame.image.load(sprite_path).convert_alpha()
-    #     player_rect = player_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-
-    #     # Game loop
-    #     cooldown = 0
-    #     start_time = time.time()
-    #     move_ticker = 0
-    #     while True:
-    #         for event in pygame.event.get():
-    #             if event.type == pygame.QUIT:
-    #                 pygame.quit()
-    #                 sys.exit()
-
-    #         # Handle keypresses
-    #         # keys = pygame.key.get_pressed()
-    #         d = False
-    #         r = 0
-
-    #         if move_ticker == len(action_history)-1:
-    #             d = True
-
-    #         action = action_history[move_ticker]
-    #         self.step(action)
-    #         move_ticker+=1
-            
-    #         # if keys[pygame.K_w]:
-    #         #     # PLAYER_POS[1] -= PLAYER_SPEED
-    #         #     o, r, d = self.step(0)
-    #         # if keys[pygame.K_s]:
-    #         #     # PLAYER_POS[1] += PLAYER_SPEED
-    #         #     o, r, d = self.step(2)
-    #         # if keys[pygame.K_a]:
-    #         #     # PLAYER_POS[0] -= PLAYER_SPEED
-    #         #     o, r, d = self.step(1)
-    #         # if keys[pygame.K_d]:
-    #         #     # PLAYER_POS[0] += PLAYER_SPEED
-    #         #     o, r, d = self.step(3)
-
-    #         # if keys[pygame.K_x]:
-    #         #     if cooldown == 0:
-    #         #         print(PLAYER_POS)
-    #         #         cooldown+=600
-
-    #         # Fill background
-    #         screen.fill(GREEN)
-
-    #         # Draw player
-    #         # pygame.draw.circle(screen, RED, PLAYER_POS, PLAYER_RADIUS)
-    #         player_rect.center = (int(self.player_pos[0]), int(self.player_pos[1]))
-    #         screen.blit(player_image, player_rect)
-
-    #         for f in self.foods:
-    #             if self.foods[f] == 1:
-    #                 pygame.draw.circle(screen, YELLOW, f, 5)
-
-    #         if d:
-    #             print("Finished game!")
-    #             break
-
-    #         # Update display
-    #         pygame.display.flip()
-
-    #         if cooldown>0:
-    #             cooldown=cooldown-1
-
-    #         clock.tick(FPS)
-
-    #     end_time = time.time()
-    #     elapsed = round(end_time - start_time,3)
-
-    #     print(f"The time taken for you was: {elapsed}")
-    #     print("Game Over!")
-
+    # Train the AI to play the game
+    training_loop()
