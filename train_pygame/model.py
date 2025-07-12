@@ -181,6 +181,8 @@ class Environment():
         self.player_pos = [int(WIDTH/2), int(HEIGHT/2)]
 
         self.last_min_euclid = 999999
+
+        self.visited_tiles = {}
         return encode_foods(self.player_pos[0], self.player_pos[1], self.foods)
 
     def reset_to_eval(self):
@@ -202,6 +204,7 @@ class Environment():
         }
 
         self.player_pos = [int(WIDTH/2), int(HEIGHT/2)]
+        self.visited_tiles = {}
 
         self.last_min_euclid = 999999
         return encode_foods(self.player_pos[0], self.player_pos[1], self.foods)
@@ -245,7 +248,6 @@ class Environment():
         elif self.player_pos[1] <= 0:
             self.player_pos[1]=0
 
-
         reward = 0
         # Check if we are in proximity of the food
         euclids = []
@@ -264,11 +266,21 @@ class Environment():
         if abs(difference) > 5:
             reward += 0 
         elif difference < 0:
-            reward += -.1 * difference
+            # reward += -.1 * difference
+            reward = .3*(-1 * difference * (((-.1/ARENA_SIZE) * min_euclid) + .1))
         if reward == 0:
             reward = -.1
         self.last_min_euclid = min_euclid
+
+        tup = (self.player_pos[0], self.player_pos[1])
+        if tup not in self.visited_tiles:
+            self.visited_tiles[tup] = 1
+        else:
+            self.visited_tiles[tup] += 1
             
+        if self.visited_tiles[tup] > 10:
+            reward = -1*self.visited_tiles[tup]
+
         # # Encode the Foods
         obs = encode_foods(self.player_pos[0], self.player_pos[1], self.foods)
         
@@ -439,21 +451,30 @@ def training_loop():
     nnet_target.load_state_dict(nnet.state_dict())
     nnet_target.eval()  # no gradients needed
 
-
     replay_buffer = deque(maxlen=10000)
     batch_size = 64
     gamma = .99
     epsilon = 1.0
     epsilon_decay = .995
     epsilon_min = .1
-    episodes = 100
+    episodes = 1000
 
     total_steps = 0
 
     EVALUATION_INTERVAL = 10
     TARGET_UPDATE_N = 5 # Update the target network every N episodes
 
-    run_tag = "20250712first"
+    run_tag = "20250712fifth"
+    # The second had a stronger reward
+    # reward = (-1 * difference * (((-.1/ARENA_SIZE) * min_euclid) + .1))
+    # Run 60 of the second was pretty good
+
+    # The third had a weaker signal to hopefully to get it to realize how nice it is to find the foods
+    # reward = .3 * (-1 * difference * (((-.1/ARENA_SIZE) * min_euclid) + .1))
+
+    # The fourth was heavily punished for visiting the same tile more than 10x times (not a great solution)
+
+    # fifth same as fourth but 
 
     for ep in range(episodes):
         start_time = time.time()
