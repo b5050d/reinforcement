@@ -4,8 +4,10 @@ env = Environment()
 # ans = load_ai_run(90, "test")
 # ans = load_ai_run(80, "closer_small_reward")
 # ans = load_ai_run(90, "20250712first")
+ans = load_ai_run(60, "20250712second")
 # ans = load_ai_run(90, "20250712third")
-ans = load_ai_run(90, "20250712fourth")
+# ans = load_ai_run(90, "20250712fourth")
+# ans = load_ai_run(570, "20250712fifth")
 env.play(True, ans["actions"], ans["foods"])
 
 # Test = initial setup, reward +1 for food, otw, reward -.01

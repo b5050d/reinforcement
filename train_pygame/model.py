@@ -25,7 +25,7 @@ WIDTH, HEIGHT = ARENA_SIZE, ARENA_SIZE
 GREEN = (0, 200, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
-PLAYER_RADIUS = 5
+# PLAYER_RADIUS = 5
 PLAYER_POS = [WIDTH // 2, HEIGHT // 2]
 PLAYER_SPEED = 1
 FPS = 120
@@ -40,6 +40,7 @@ def normalize_delta(span, delta):
         return 1
     return ans
 
+
 def find_euclidean_distance(point_a, point_b):
     """
     Find the euclidean distance between 2 points
@@ -48,6 +49,7 @@ def find_euclidean_distance(point_a, point_b):
     point_b = np.array(point_b)
     return np.linalg.norm(point_a - point_b)
 
+
 def find_x_y_delta(player_pos, food_pos):
     """
     Find the X and Y differences between 2 points
@@ -55,6 +57,7 @@ def find_x_y_delta(player_pos, food_pos):
     dx = food_pos[0] - player_pos[0]
     dy = food_pos[1] - player_pos[1]
     return dx, dy
+
 
 def save_ai_run(foods, actions, run_iter, run_tag):
     """
@@ -474,7 +477,7 @@ def training_loop():
 
     # The fourth was heavily punished for visiting the same tile more than 10x times (not a great solution)
 
-    # fifth same as fourth but 
+    # fifth same as fourth but training on more games
 
     for ep in range(episodes):
         start_time = time.time()
@@ -598,7 +601,7 @@ def play_loop():
 
 if __name__ == "__main__":
     # Play the game as a human
-    # play_loop()
+    play_loop()
 
     # Train the AI to play the game
-    training_loop()
+    # training_loop()
