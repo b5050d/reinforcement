@@ -1,3 +1,8 @@
+"""
+Contains methods for generation of our
+state space
+"""
+
 
 import math
 import numpy as np

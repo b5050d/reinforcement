@@ -6,7 +6,6 @@ The user can run this script to play the game
 
 # Handle Imports
 import pygame
-from collections import deque
 from resources import sprite_path
 import sys
 from food_matrix import (

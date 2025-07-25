@@ -14,6 +14,7 @@ def normalize_delta(span, delta):
         return 1
     return ans
 
+
 def find_euclidean_distance(point_a, point_b):
     """
     Find the euclidean distance between 2 points
@@ -21,6 +22,7 @@ def find_euclidean_distance(point_a, point_b):
     point_a = np.array(point_a)
     point_b = np.array(point_b)
     return np.linalg.norm(point_a - point_b)
+
 
 def find_x_y_delta(player_pos, food_pos):
     """

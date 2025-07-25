@@ -8,3 +8,7 @@ My first attempts at the medium model were a failure and I need to refactor thin
 - Could start with just one food, and then move up from there
 
 - going to have the environment be a matrix
+
+
+### Curriculum Brainstorming
+- Looks like on a small map with a single resource

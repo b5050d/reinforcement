@@ -7,7 +7,7 @@ def save_ai_run(foods, actions, run_iter, run_tag):
     """
     Save an AI run to the archive
     """
-    assert type(foods) is dict
+    assert type(foods) is list
     assert type(actions) is list
     assert type(actions[0]) is int
 
@@ -17,7 +17,9 @@ def save_ai_run(foods, actions, run_iter, run_tag):
 
     run_iter = f"{run_iter:04d}"
 
-    filepath = os.path.join(os.path.dirname(__file__), "stored", f"{run_tag}_{run_iter}.pkl")
+    store_folder = os.path.join(os.path.dirname(__file__), "stored", run_tag)
+    os.makedirs(store_folder, exist_ok=True)
+    filepath = os.path.join(store_folder, f"{run_tag}_{run_iter}.json")
 
     with open(filepath, "w") as f:
         json.dump(run, f)
@@ -28,7 +30,9 @@ def save_ai_model(model, model_tag, model_num):
     """
     Save the AI model for future re-use
     """
-    filepath = os.path.join(os.path.dirname(__file__), "stored", f"{model_tag}_{model_num:04d}.pth")
+    store_folder = os.path.join(os.path.dirname(__file__), "stored", model_tag)
+    os.makedirs(store_folder, exist_ok=True)
+    filepath = os.path.join(store_folder, f"{model_tag}_{model_num:04d}.pth")
     torch.save(model.state_dict(), filepath)
 
 
@@ -47,7 +51,9 @@ def load_ai_run(run_iter, run_tag):
     Load an AI run to see how it has done
     """
     run_iter = f"{run_iter:04d}"
-    filepath = os.path.join(os.path.dirname(__file__), "stored", f"{run_tag}_{run_iter}.pkl")
+
+    store_folder = os.path.join(os.path.dirname(__file__), "stored", run_tag)
+    filepath = os.path.join(store_folder, f"{run_tag}_{run_iter}.json")
     with open(filepath, "rb") as f:
         ans = json.load(f)
     return ans

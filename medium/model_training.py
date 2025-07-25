@@ -2,7 +2,6 @@
 Model Training
 """
 
-
 from environment import Environment
 from model import DQN
 import torch
@@ -13,6 +12,7 @@ import time
 import random
 import numpy as np
 import pygame
+from model_management import save_ai_run
 
 
 def training_loop():
@@ -38,6 +38,7 @@ def training_loop():
     epsilon_min = .1
     episodes = 100
     max_episode_steps = 2000
+    run_tag = "test"
 
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = "cpu" # CPU is faster on this simple simulation
@@ -138,6 +139,7 @@ def evaluation_loop(run_tag, env, ep, nnet):
     for epi in range(episodes):
         # Reset the env
         state = env.reset()
+        foods = env.foods
         done = False
 
         action_history = []
@@ -159,7 +161,11 @@ def evaluation_loop(run_tag, env, ep, nnet):
     avg_reward = total_reward / episodes
     print(f"[Eval] Avg reward over {episodes} eval runs: {avg_reward:.2f}")
 
+    # Save a run
+    save_ai_run(foods, action_history, ep, run_tag)
+
     nnet.train() # Set it back in training mode
+
 
 if __name__ == "__main__":
     training_loop()
