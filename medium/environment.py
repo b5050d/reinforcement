@@ -1,92 +1,19 @@
-# Simplify and Scale
+"""
+The Actual Simulation is made here
+
+The user can run this script to play the game
+"""
 
 # Handle Imports
 import pygame
 from collections import deque
 from resources import sprite_path
 import sys
-
-# import random
-
-# # Set the seed
-# random.seed(42)
-
-# # Generate 10 random numbers
-# numbers = [random.random() for _ in range(10)]
-
-# print(numbers)
-
-
-
-
-# import numpy as np
-
-# rng = np.random.default_rng(seed=42)
-# numbers = rng.random(10)
-
-# print(numbers)
-
-# def get_random_foods(width, height, num = 10):
-#     """
-#     Get a random arrangement of foods about the arena
-#     """
-#     foods = {}
-#     for i in range(num):
-#         stop_condition = False
-#         while not stop_condition:
-#             x = np.random.randint(20, width- 20)
-#             y = np.random.randint(20, height - 20)
-#             rand_pos = (x, y)
-#             if rand_pos not in foods:
-#                 stop_condition = True
-#                 foods[rand_pos] = 1
-#     return foods
-
-# def encode_foods(player_x, player_y, foods):
-#     """
-#     Encode the foods dictionary into an observation space
-#     digestible by the model
-#     """
-
-#     diffs_active = []
-#     keys_active = []
-
-#     diffs_inactive = []
-#     keys_inactive = []
-#     for fpos in foods.keys():
-#         if foods[fpos] ==  1:
-#             diffs_active.append(find_euclidean_distance([player_x, player_y], fpos))
-#             keys_active.append(fpos)
-#         else:
-#             diffs_inactive.append(find_euclidean_distance([player_x, player_y], fpos))
-#             keys_inactive.append(fpos)
-    
-#     sorted_pairs_active = sorted(zip(diffs_active, keys_active))
-#     sorted_pairs_inactive = sorted(zip(diffs_inactive, keys_inactive))
-
-#     foods_array = []
-
-#     # Add the players position here
-#     foods_array.append(player_x/WIDTH)
-#     foods_array.append(player_y/HEIGHT)
-
-#     for euc, fpos in sorted_pairs_active:
-#         dx, dy = find_x_y_delta([player_x, player_y], fpos)
-#         foods_array.append(normalize_delta(WIDTH, dx))
-#         foods_array.append(normalize_delta(HEIGHT, dy))
-#         foods_array.append(foods[fpos])
-
-#     for euc, fpos in sorted_pairs_inactive:
-#         dx, dy = find_x_y_delta([player_x, player_y], fpos)
-#         foods_array.append(normalize_delta(WIDTH, dx))
-#         foods_array.append(normalize_delta(HEIGHT, dy))
-#         foods_array.append(foods[fpos])
-    
-#     # print(foods_array)
-#     assert max(foods_array) <= 1
-#     assert min(foods_array) >= 0
-
-#     return np.array(foods_array, dtype=np.float32)
+from food_matrix import (
+    get_random_food_positions,
+    compute_directional_signals
+)
+from spatial_methods import find_euclidean_distance
 
 
 class Environment():
@@ -113,10 +40,11 @@ class Environment():
         # Super small
         self.N_FOODS = 1
         self.RANDOM_TYPE = "fixed"
-        self.ARENA_SIZE = 30
+        self.ARENA_SIZE = 20
         self.PLAYER_SPEED = 1
         self.FPS = 12
         self.RENDER_MULT = 10
+        self.PLAYER_RADIUS = .5
 
         # # Original 300x300
         # self.N_FOODS = 10
@@ -125,11 +53,9 @@ class Environment():
         # self.PLAYER_SPEED = 1
         # self.FPS = 120
         # self.RENDER_MULT = 1
-    
 
         self.player_position = [self.ARENA_SIZE//2, self.ARENA_SIZE//2]
         
-
     def set_up_game(self):
         """
         Set up the Pygame environment
@@ -167,6 +93,9 @@ class Environment():
         self.screen.blit(self.player_image, self.player_rect)
 
         # Now draw the foods
+        for f in self.foods:
+            render_pos = (f[0]*self.RENDER_MULT, f[1]*self.RENDER_MULT)
+            pygame.draw.circle(self.screen, self.YELLOW, render_pos, 5)
 
         # Increment the clock
         self.clock.tick(self.FPS)
@@ -188,11 +117,12 @@ class Environment():
         Reset the game
         """
         # Reset the player position to the center
+        self.player_position = [self.ARENA_SIZE//2, self.ARENA_SIZE//2]
 
         # Reset the foods
         if self.RANDOM_TYPE == "fixed":
             # Load a fixed randomness
-            pass
+            self.foods = get_random_food_positions(self.ARENA_SIZE, self.N_FOODS, 42)
         elif self.RANDOM_TYPE == "semi-random":
             # Load a semi random
             pass
@@ -201,6 +131,8 @@ class Environment():
             pass
         else:
             raise Exception("Error, unrecognized random type or not set")
+        
+        return compute_directional_signals(self.player_position, self.foods)
 
     def perform_action(self, action):
         """
@@ -245,15 +177,32 @@ class Environment():
         """
         Perform an Action and Progress the game
         """
+        reward = 0
 
         # Perform action
         self.perform_action(action)
 
         # Check if we have reached a food
+        foods = []
+        for f in self.foods:
+            dist = find_euclidean_distance(f, self.player_position)
+
+            if dist <= self.PLAYER_RADIUS:
+                pass
+                reward += 1
+            else:
+                foods.append(f)
+        self.foods = foods
+
+        if self.foods == []:
+            done = True
+        else:
+            done = False
 
         # Update Observation Space
+        next_state = compute_directional_signals(self.player_position, self.foods)
 
-        return 0, 0, False
+        return next_state, reward, done
 
     def handle_keypresses(self):
         """
@@ -323,12 +272,13 @@ class Environment():
             total_reward+=reward
 
             self.update_game_rendering()
-        # Rendering Steps
-        for f in self.foods:
-            pass
 
-        if done:
-            pass
+            # Rendering Steps
+            for f in self.foods:
+                pass
+
+            if done:
+                break
         
         # Print the end stats to let the player know how they did!
 

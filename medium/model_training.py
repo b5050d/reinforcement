@@ -3,18 +3,49 @@ Model Training
 """
 
 
+from environment import Environment
+from model import DQN
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from collections import deque
+import time
+import random
+import numpy as np
+import pygame
 
 
 def training_loop():
+    """
+    Train the model on the environment
+    """
+
+    LEARNING_RATE = 1e-3
+
+    total_steps = 0
+
+    EVALUATION_INTERVAL = 10
+    TARGET_UPDATE_N = 5 # Update the target network every N episodes
+
+    # Establish the Environment to re-use
     env = Environment()
 
+    replay_buffer = deque(maxlen=10000)
+    batch_size = 64
+    gamma = .99
+    epsilon = 1.0
+    epsilon_decay = .995
+    epsilon_min = .1
+    episodes = 100
+    max_episode_steps = 2000
+
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = "cpu"
+    device = "cpu" # CPU is faster on this simple simulation
     print(f"Using device: {device}")
 
+    # Set up the Training Network
     nnet = DQN()
     nnet.to(device)
-    LEARNING_RATE = 1e-3
     optimizer = optim.Adam(nnet.parameters(), lr = LEARNING_RATE)
     loss_fn = nn.MSELoss()
 
@@ -23,31 +54,7 @@ def training_loop():
     nnet_target.load_state_dict(nnet.state_dict())
     nnet_target.eval()  # no gradients needed
 
-    replay_buffer = deque(maxlen=10000)
-    batch_size = 64
-    gamma = .99
-    epsilon = 1.0
-    epsilon_decay = .995
-    epsilon_min = .1
-    episodes = 1000
-
-    total_steps = 0
-
-    EVALUATION_INTERVAL = 10
-    TARGET_UPDATE_N = 5 # Update the target network every N episodes
-
-    run_tag = "20250712fifth"
-    # The second had a stronger reward
-    # reward = (-1 * difference * (((-.1/ARENA_SIZE) * min_euclid) + .1))
-    # Run 60 of the second was pretty good
-
-    # The third had a weaker signal to hopefully to get it to realize how nice it is to find the foods
-    # reward = .3 * (-1 * difference * (((-.1/ARENA_SIZE) * min_euclid) + .1))
-
-    # The fourth was heavily punished for visiting the same tile more than 10x times (not a great solution)
-
-    # fifth same as fourth but training on more games
-
+    # Loop Through the specified amount of episodes
     for ep in range(episodes):
         start_time = time.time()
         print(f"Beginning Episode: {ep}")
@@ -55,7 +62,7 @@ def training_loop():
         total_reward = 0
 
         action_history = []
-        for t in range(2000):
+        for t in range(max_episode_steps):
             if random.random() < epsilon:
                 action = random.randint(0, 7)
             else:
@@ -113,17 +120,16 @@ def training_loop():
         print(f"Episode {ep}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")
         print(f"Episode Run time = {round(time.time() - start_time, 3)}")
 
-        # Save the run every 10
+        # Save the run every so often
         if ep%EVALUATION_INTERVAL == 0:
-            # tag = "closer_bigbig_reward"
-            # save_ai_run(env.foods, action_history, ep, tag)
-            # save_ai_model(nnet, tag, ep)
             evaluation_loop(run_tag, env, ep, nnet)
-
             pygame.quit()
 
 
 def evaluation_loop(run_tag, env, ep, nnet):
+    """
+    Simple Evaluation Loop for the training of our model
+    """
     print("Running Evaluation Loop")
     nnet.eval()
 
@@ -131,7 +137,7 @@ def evaluation_loop(run_tag, env, ep, nnet):
     total_reward = 0
     for epi in range(episodes):
         # Reset the env
-        state = env.reset_to_eval()
+        state = env.reset()
         done = False
 
         action_history = []
@@ -153,12 +159,8 @@ def evaluation_loop(run_tag, env, ep, nnet):
     avg_reward = total_reward / episodes
     print(f"[Eval] Avg reward over {episodes} eval runs: {avg_reward:.2f}")
 
-    # TODO - Save the model
-    print("Information for saving model:")
-    print(f"Ep: {ep}")
-    print(f"run tag: {run_tag}")
-    save_ai_run(env.foods, action_history, ep, run_tag)
-    save_ai_model(nnet, run_tag, ep)
-
     nnet.train() # Set it back in training mode
+
+if __name__ == "__main__":
+    training_loop()
 

@@ -1,25 +1,9 @@
 
 import math
-
-# import random
-
-# # Set the seed
-# random.seed(42)
-
-# # Generate 10 random numbers
-# numbers = [random.random() for _ in range(10)]
-
-# print(numbers)
-
-
-# import numpy as np
-
-# rng = np.random.default_rng(seed=42)
-# numbers = rng.random(10)
-
-# print(numbers)
-
 import numpy as np
+from spatial_methods import find_x_y_delta, find_euclidean_distance
+
+
 def get_random_matrix(size, n_foods, seed):
     assert type(size) is int
     assert type(seed) is int
@@ -47,8 +31,11 @@ def get_random_food_positions(size, n_foods, seed):
     for i in range(n_foods):
         # Generate a new food position
         # TODO - make sure the food dont appear on the very edge of the map
-        x = np.random.randint(0, size)
-        y = np.random.randint(0, size)
+        try:
+            x = np.random.randint(0, size)
+            y = np.random.randint(0, size)
+        except:
+            raise Exception("Already in the ")
         food_positions.append((x, y))
     return food_positions
 
@@ -80,9 +67,9 @@ def distribute_signal_to_bins(angle, strength):
     return bins
 
 
-def compute_directional_signals(dx, dy, draw_dist):
+def compute_directional_signal(dx, dy, euclid):
     """
-    Compute the directional signal for a spec
+    Compute the directional signal for a specific food, given dy dx
     """
     result = [0] * 8
     # 0 = up , 1 = ur, 2= r, 3 = dr, 4 = d, 5 = dl, 6 = l, 7 = ul
@@ -91,7 +78,7 @@ def compute_directional_signals(dx, dy, draw_dist):
     theta = heading_from_dxdy(dx, dy)
 
     # Get the strength
-    dist = math.sqrt((dx**2) + (dy**2))
+    dist = euclid
     strength = 1/(dist**.9) # signal decay
 
     # Perform Angular binning
@@ -100,3 +87,35 @@ def compute_directional_signals(dx, dy, draw_dist):
     return result
 
 
+def compute_directional_signals(player_pos, food_positions):
+    """
+    
+    """
+    if len(food_positions) == 0:
+        return [0]*8
+    signals = []
+    for f in food_positions:
+        dx, dy = find_x_y_delta(player_pos, f)
+        euclid = find_euclidean_distance(player_pos, f)
+
+        signal = compute_directional_signal(dx, dy, euclid)
+        signals.append(signal)
+    
+    summed_signal = []
+    for i in range(len(signals[0])):
+        sum = 0
+        for s in signals:
+            sum+=s[i]
+        summed_signal.append(sum)
+
+    # normalize the summed signal
+    normalized_summed_signal = []
+    for s in summed_signal:
+        if s < 0:
+            raise Exception
+        elif s > 1:
+            normalized_summed_signal.append(1)
+        else:
+            normalized_summed_signal.append(s)
+
+    return normalized_summed_signal
