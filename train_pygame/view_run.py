@@ -3,7 +3,7 @@ from model import Environment, load_ai_run
 env = Environment()
 # ans = load_ai_run(90, "test")
 # ans = load_ai_run(80, "closer_small_reward")
-ans = load_ai_run(40, "closer_big_reward")
+ans = load_ai_run(490, "closer_bigbig_reward")
 env.play(True, ans["actions"], ans["foods"])
 
 # Test = initial setup, reward +1 for food, otw, reward -.01
