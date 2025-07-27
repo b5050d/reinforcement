@@ -6,13 +6,13 @@ The user can run this script to play the game
 
 # Handle Imports
 import pygame
-from resources import sprite_path
+from medium.resources import sprite_path
 import sys
-from food_matrix import (
+from medium.food_matrix import (
     get_random_food_positions,
     compute_directional_signals
 )
-from spatial_methods import find_euclidean_distance
+from medium.spatial_methods import find_euclidean_distance
 
 
 class Environment():

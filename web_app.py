@@ -23,8 +23,10 @@ class AppFactory:
 
         self.set_up_routes()
 
+        return self.app
+
     def set_up_routes(self):
-        pass
+        set_up_routes(self.app)
 
 
 # TODO - Implement a button that allows the user to play the game
@@ -33,8 +35,6 @@ class AppFactory:
 # TODO - Implement a button that allows the user to start a training loop
 
 # TODO - Implement a feature that allows the user to set up a config
-
-# TODO - Implement a display for the Tables
 
 # TODO - Implement a filter to filter results by experiment
 

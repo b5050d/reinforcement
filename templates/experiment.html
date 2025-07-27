@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Experiment : {{ experiment_id }}{% endblock %}
+
+{% block header %}Reinforcement Learning Training Site{% endblock %}
+
+{% block content %}
+<h1>Experiment : {{ experiment_id }}</h1>
+
+<h3>Training Table</h3>
+<div class="scroll-container">
+    <table class="clean-table">
+        <thead>
+            <tr>
+                <th>Training Step ID</th>
+                <th>Experiment ID</th>
+                <th>Episode</th>
+                <th>Epsilon</th>
+                <th>Reward</th>
+                <th>Replay</th>
+                <th>Model ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for train in training_table %}
+            <tr>
+                <td>{{ train[0] }}</td>
+                <td>{{ train[1] }}</td>
+                <td>{{ train[2] }}</td>
+                <td>{{ train[3] }}</td>
+                <td>{{ train[4] }}</td>
+                <td>{{ train[5] }}</td>
+                <td>{{ train[6] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h3>Evaluation Table</h3>
+<div class="scroll-container">
+    <table class="clean-table">
+        <thead>
+            <tr>
+                <th>Evaluation Step ID</th>
+                <th>Experiment ID</th>
+                <th>Episode</th>
+                <th>Reward</th>
+                <th>Replay</th>
+                <th>Model ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for eval in evaluation_table %}
+            <tr>
+                <td>{{ eval[0] }}</td>
+                <td>{{ eval[1] }}</td>
+                <td>{{ eval[2] }}</td>
+                <td>{{ eval[3] }}</td>
+                <td>{{ eval[4] }}</td>
+                <td>{{ eval[5] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

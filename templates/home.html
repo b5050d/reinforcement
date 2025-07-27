@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Home - My Flask App{% endblock %}
+
+{% block header %}Reinforcement Learning Training Site{% endblock %}
+
+{% block content %}
+    <h2>Home Page</h2>
+    <p>This is the home page of your Flask app. Edit this content as needed.</p>
+
+    <textarea id="configInput" rows="10" cols="80">
+    {
+    "EXPERIMENT_DESCRIPTION": "working on it",
+    "LEARINING_RATE": 0.001,
+    "EVALUATION_INTERVAL": 10,
+    "TARGET_UPDATE_N": 5,
+    "BATCH_SIZE": 64,
+    "GAMMA": 0.99,
+    "STARTING_EPSILON": 1.0,
+    "EPSILON_DECAY": 0.995,
+    "EPSILON_MIN": 0.1,
+    "EPISODES": 50,
+    "MAX_EPISODE_STEPS": 2000,
+    "DUMMY_VAR": 0
+    }
+    </textarea>
+    <br>
+    <button onclick="submitConfig()">Run a new Experiment</button>
+    <script>
+    function submitConfig() {
+    const raw = document.getElementById('configInput').value;
+    fetch("/run_training_loop", {
+        method: "POST",
+        body: raw,
+        headers: { "Content-Type": "application/json" }
+    });
+    }
+    </script>
+
+
+    <h3>Experiment Table:</h3>
+    <div class="scroll-container">
+        <table class="clean-table">
+            <thead>
+                <tr>
+                    <th>Experiment ID</th>
+                    <th>Experiment Description</th>
+                    <th>Experiment Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in experiments_table %}
+                <tr>
+                    <td>{{ exp[0] }}</td>
+                    <td>{{ exp[1] }}</td>
+                    <td><a href = "{{ exp[2] }}">Open Experiment</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

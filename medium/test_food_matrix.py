@@ -3,7 +3,7 @@ Testing script for the food matrix
 """
 import math
 
-from food_matrix import (
+from medium.food_matrix import (
     get_random_food_positions,
     heading_from_dxdy,
     distribute_signal_to_bins,

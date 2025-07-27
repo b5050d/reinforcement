@@ -2,8 +2,6 @@
 Model Training
 """
 
-from environment import Environment
-from model import DQN
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -12,25 +10,17 @@ import time
 import random
 import numpy as np
 import pygame
-from model_management import save_ai_run
+from medium.model_management import save_ai_run
+from medium.environment import Environment
+from medium.model import DQN
 
 
 def training_loop():
     """
     Train the model on the environment
     """
-
+    # Config stuff
     LEARNING_RATE = 1e-3
-
-    total_steps = 0
-
-    EVALUATION_INTERVAL = 10
-    TARGET_UPDATE_N = 5 # Update the target network every N episodes
-
-    # Establish the Environment to re-use
-    env = Environment()
-
-    replay_buffer = deque(maxlen=10000)
     batch_size = 64
     gamma = .99
     epsilon = 1.0
@@ -39,6 +29,15 @@ def training_loop():
     episodes = 100
     max_episode_steps = 2000
     run_tag = "test"
+
+    EVALUATION_INTERVAL = 10
+    TARGET_UPDATE_N = 5 # Update the target network every N episodes
+
+    # Establish the Environment to re-use
+    env = Environment()
+
+    total_steps = 0
+    replay_buffer = deque(maxlen=10000)
 
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = "cpu" # CPU is faster on this simple simulation

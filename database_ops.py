@@ -503,6 +503,54 @@ def query_replays_per_experiment(database_path, experiment_id):
     return rows
 
 
+def query_training_loops_by_experiment(database_path, experiment_id):
+    if not os.path.exists(database_path):
+        return []
+
+    if not table_exists(database_path, "Training"):
+        return []
+
+    # Is the Experiment present
+    ans = get_all_experiments(database_path)
+    success = False
+    for item in ans:
+        if item[0] == experiment_id:
+            success = True
+    
+    if not success:
+        raise Exception("No Experiment Found")
+    
+    with get_connection(database_path) as connection:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM Training WHERE experiment_id = ?", (experiment_id,))
+        rows = cursor.fetchall()
+    return rows
+
+
+def query_evaluation_loops_by_experiment(database_path, experiment_id):
+    if not os.path.exists(database_path):
+        return []
+
+    if not table_exists(database_path, "Training"):
+        return []
+
+    # Is the Experiment present
+    ans = get_all_experiments(database_path)
+    success = False
+    for item in ans:
+        if item[0] == experiment_id:
+            success = True
+    
+    if not success:
+        raise Exception("No Experiment Found")
+    
+    with get_connection(database_path) as connection:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM Evaluation WHERE experiment_id = ?", (experiment_id,))
+        rows = cursor.fetchall()
+    return rows
+
+
 def get_model_path(model_folder_path, model_id):
     """
     Get a model path from the id

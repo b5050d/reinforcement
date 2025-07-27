@@ -6,7 +6,7 @@ state space
 
 import math
 import numpy as np
-from spatial_methods import find_x_y_delta, find_euclidean_distance
+from medium.spatial_methods import find_x_y_delta, find_euclidean_distance
 
 
 def get_random_matrix(size, n_foods, seed):
