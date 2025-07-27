@@ -18,11 +18,11 @@ Q Update Code
 Normal Equation (factoring in future rewards)
 Q(s, a) = Q(state, action) + alpha(reward + y(max(Q(next_state, :)) - Q(s, a))
 
-
 Simplified Equation as future potential means nothing in this example
 Q(s, a) = Q(s, a) + alpha(reward - Q(s, a))
 
 """
+
 
 class Environment():
     def __init__(self):
@@ -88,7 +88,8 @@ class Training:
             reward = self.env.perform_action(action)
             self.player.q_update(state, action, reward)
             self.rewards.append(reward)
-        
+
+
 if __name__ == "__main__":
     """
     Run a few rounds of training to see how they converge
