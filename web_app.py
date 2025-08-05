@@ -32,14 +32,7 @@ class AppFactory:
 # TODO - Implement a button that allows the user to play the game
 # with the selected config
 
-# TODO - Implement a button that allows the user to start a training loop
-
-# TODO - Implement a feature that allows the user to set up a config
-
-# TODO - Implement a filter to filter results by experiment
-
 # TODO - Implement a plot that will plot the selected experiement's loss / rewards
-
 
 
 

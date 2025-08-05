@@ -9,6 +9,8 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from database_ops import *
 from config import DATABASE_PATH, REPLAY_PATH, MODEL_PATH
 from medium.model_training import training_loop
+from threading import Thread
+import time
 
 def set_up_routes(app):
     """
@@ -55,6 +57,8 @@ def set_up_routes(app):
 
         training_runs = query_training_loops_by_experiment(DATABASE_PATH, experiment_id)
 
+        print("Training Runs")
+        print(training_runs)
 
         # TODO - Add in a view of the Evaluation Loops
         # TODO - Add in a view of the Evaluation Rewards
@@ -88,14 +92,17 @@ def set_up_routes(app):
         config["MODEL_PATH"] = MODEL_PATH
         config["REPLAY_PATH"] = REPLAY_PATH
 
-
         print("Got the config")
         print(config)
         print(type(config))
 
-        # This should be started in a new thread or something 
-        # training_loop()
-        return jsonify({"status": "ok"})
+        # This should be started in a new thread or something
+        new_thread = Thread(target=training_loop, args=(config, experiment_id,))
+        new_thread.start()
+
+        # time.sleep(1)
+
+        # return jsonify({"status": "ok"})
         return redirect(url_for("home"))
 
 

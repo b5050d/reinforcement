@@ -13,31 +13,24 @@ import pygame
 from medium.model_management import save_ai_run
 from medium.environment import Environment
 from medium.model import DQN
+from database_ops import *
+from config import DATABASE_PATH
 
 
-def training_loop():
+
+def training_loop(config, experiment_id):
     """
     Train the model on the environment
     """
-    # Config stuff
-    LEARNING_RATE = 1e-3
-    batch_size = 64
-    gamma = .99
-    epsilon = 1.0
-    epsilon_decay = .995
-    epsilon_min = .1
-    episodes = 100
-    max_episode_steps = 2000
-    run_tag = "test"
-
-    EVALUATION_INTERVAL = 10
-    TARGET_UPDATE_N = 5 # Update the target network every N episodes
+    print(config)
 
     # Establish the Environment to re-use
     env = Environment()
 
     total_steps = 0
     replay_buffer = deque(maxlen=10000)
+
+    epsilon = config["STARTING_EPSILON"]
 
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = "cpu" # CPU is faster on this simple simulation
@@ -46,7 +39,7 @@ def training_loop():
     # Set up the Training Network
     nnet = DQN()
     nnet.to(device)
-    optimizer = optim.Adam(nnet.parameters(), lr = LEARNING_RATE)
+    optimizer = optim.Adam(nnet.parameters(), lr = config['LEARNING_RATE'])
     loss_fn = nn.MSELoss()
 
     # Set up the Target Network
@@ -55,14 +48,16 @@ def training_loop():
     nnet_target.eval()  # no gradients needed
 
     # Loop Through the specified amount of episodes
-    for ep in range(episodes):
+    for episode in range(config['EPISODES']):
+        print(f"Beginning Episode: {episode}")
         start_time = time.time()
-        print(f"Beginning Episode: {ep}")
+
         state = env.reset()
         total_reward = 0
 
         action_history = []
-        for t in range(max_episode_steps):
+
+        for step in range(config['MAX_EPISODE_STEPS']):
             if random.random() < epsilon:
                 action = random.randint(0, 7)
             else:
@@ -80,8 +75,8 @@ def training_loop():
             total_reward += reward
 
             # Train
-            if (len(replay_buffer) >= batch_size) and (total_steps > 1000):
-                batch = random.sample(replay_buffer, batch_size)
+            if (len(replay_buffer) >= config['BATCH_SIZE']) and (total_steps > 1000):
+                batch = random.sample(replay_buffer, config['BATCH_SIZE'])
                 s, a, r, s2, d = zip(*batch)
                 s = np.array(s)
                 a = np.array(a)
@@ -100,7 +95,7 @@ def training_loop():
 
                 with torch.no_grad():
                     max_q_s2 = nnet_target(s2).max(1)[0]
-                    target = r + gamma * max_q_s2 * (1 - d)
+                    target = r + config['GAMMA'] * max_q_s2 * (1 - d)
 
                 loss = loss_fn(qval, target)
                 optimizer.zero_grad()
@@ -111,18 +106,19 @@ def training_loop():
 
             if done:
                 break
-                
 
-        if ep%TARGET_UPDATE_N == 0:  # or every N episodes or steps
+        if episode%config['TARGET_UPDATE_N'] == 0:  # or every N episodes or steps
             nnet_target.load_state_dict(nnet.state_dict())
 
-        epsilon = max(epsilon_min, epsilon * epsilon_decay)
-        print(f"Episode {ep}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")
+        epsilon = max(config['EPSILON_MIN'], epsilon * config['EPSILON_DECAY'])
+        print(f"Episode {episode}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")
         print(f"Episode Run time = {round(time.time() - start_time, 3)}")
 
+        add_training_run(DATABASE_PATH, experiment_id, episode, round(epsilon,3), reward, None, None)
+
         # Save the run every so often
-        if ep%EVALUATION_INTERVAL == 0:
-            evaluation_loop(run_tag, env, ep, nnet)
+        if episode%config['EVALUATION_INTERVAL'] == 0:
+            evaluation_loop(config['EXPERIMENT_DESCRIPTION'], env, episode, nnet)
             pygame.quit()
 
 

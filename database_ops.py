@@ -531,7 +531,7 @@ def query_evaluation_loops_by_experiment(database_path, experiment_id):
     if not os.path.exists(database_path):
         return []
 
-    if not table_exists(database_path, "Training"):
+    if not table_exists(database_path, "Evaluation"):
         return []
 
     # Is the Experiment present
@@ -597,3 +597,10 @@ def delete_experiment(database_path, replay_folder_path, model_folder_path, expe
     with get_connection(database_path) as connection:
         cursor = connection.cursor()
         cursor.execute("DELETE FROM Experiment WHERE id = ?", (experiment_id,))
+
+if __name__ == "__main__":
+    from config import DATABASE_PATH
+
+    ans = get_all_training_runs(DATABASE_PATH)
+
+    print(ans)

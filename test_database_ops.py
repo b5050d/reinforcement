@@ -413,4 +413,10 @@ def test_delete_experiment(tmp_path):
     assert len(ans) == 0
 
 
-def test_
+# def test_quer
+def test_query_evaluation_loops_by_experiment(tmp_path):
+    db_path = os.path.join(tmp_path, "test1.db")
+    replay_folder = os.path.join(tmp_path, "replay")
+    model_folder = os.path.join(tmp_path, "model")
+
+    # TODO - Implement this

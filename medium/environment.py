@@ -32,9 +32,6 @@ class Environment():
         """
         Define needed variables for the simulation
         """
-        self.GREEN = (0, 200, 0)
-        self.RED = (255, 0, 0)
-        self.YELLOW = (255, 255, 0)
 
         # Super small
         self.N_FOODS = 1
@@ -52,6 +49,10 @@ class Environment():
         # self.PLAYER_SPEED = 1
         # self.FPS = 120
         # self.RENDER_MULT = 1
+
+        self.GREEN = (0, 200, 0)
+        self.RED = (255, 0, 0)
+        self.YELLOW = (255, 255, 0)
 
         self.player_position = [self.ARENA_SIZE//2, self.ARENA_SIZE//2]
         
