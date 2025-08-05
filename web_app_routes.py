@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from database_ops import *
 from config import DATABASE_PATH, REPLAY_PATH, MODEL_PATH
 from medium.model_training import training_loop
+from medium.environment import Environment
 from threading import Thread
 import time
 
@@ -104,6 +105,21 @@ def set_up_routes(app):
 
         # return jsonify({"status": "ok"})
         return redirect(url_for("home"))
+    
+    @app.route("/play_game", methods=["POST"])
+    def play_game():
+        """
+        Play the game as a user
+        """
+
+        config = request.get_json(force=True)
+
+        game_thread = Environment(config)
+
+        new_thread = Thread(target=game_thread.play, daemon=True)
+        new_thread.start()
+
+        return jsonify({"status": "ok"})
 
 
 # Kind of need some way to do the config

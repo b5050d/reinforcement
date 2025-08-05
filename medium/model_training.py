@@ -17,13 +17,14 @@ from database_ops import *
 from config import DATABASE_PATH
 
 
-
 def training_loop(config, experiment_id):
     """
     Train the model on the environment
     """
+    print("heres the config")
     print(config)
 
+    return
     # Establish the Environment to re-use
     env = Environment()
 

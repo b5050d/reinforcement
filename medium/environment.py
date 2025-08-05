@@ -21,10 +21,11 @@ class Environment():
     interact with this in order to play the game
     """
 
-    def __init__(self):
+    def __init__(self, config):
         """
         Set up the environment
         """
+        self.config = config
         self.define_variables()
         self.reset()
     
@@ -33,14 +34,22 @@ class Environment():
         Define needed variables for the simulation
         """
 
-        # Super small
-        self.N_FOODS = 1
-        self.RANDOM_TYPE = "fixed"
-        self.ARENA_SIZE = 20
-        self.PLAYER_SPEED = 1
-        self.FPS = 12
-        self.RENDER_MULT = 10
-        self.PLAYER_RADIUS = .5
+        self.N_FOODS = self.config['N_FOODS']
+        self.RANDOM_TYPE = self.config['RANDOM_TYPE']
+        self.ARENA_SIZE = self.config['ARENA_SIZE']
+        self.PLAYER_SPEED = self.config['PLAYER_SPEED']
+        self.FPS = self.config['FPS']
+        self.RENDER_MULT = self.config['RENDER_MULT']
+        self.PLAYER_RADIUS = self.config['PLAYER_RADIUS']
+
+        # # Super small
+        # self.N_FOODS = 1
+        # self.RANDOM_TYPE = "fixed"
+        # self.ARENA_SIZE = 20
+        # self.PLAYER_SPEED = 1
+        # self.FPS = 12
+        # self.RENDER_MULT = 10
+        # self.PLAYER_RADIUS = .5
 
         # # Original 300x300
         # self.N_FOODS = 10
@@ -120,13 +129,13 @@ class Environment():
         self.player_position = [self.ARENA_SIZE//2, self.ARENA_SIZE//2]
 
         # Reset the foods
-        if self.RANDOM_TYPE == "fixed":
+        if self.RANDOM_TYPE == 0:
             # Load a fixed randomness
             self.foods = get_random_food_positions(self.ARENA_SIZE, self.N_FOODS, 42)
-        elif self.RANDOM_TYPE == "semi-random":
+        elif self.RANDOM_TYPE == 1:
             # Load a semi random
             pass
-        elif self.RANDOM_TYPE == "random":
+        elif self.RANDOM_TYPE == 2:
             # Load a fully random food list
             pass
         else:
@@ -245,10 +254,11 @@ class Environment():
                 pygame.quit()
                 sys.exit()
 
-    def play(self, ai = False):
+    def play(self, ai=False):
         """
         Play the Game
         """
+        print("Entered the Play Method")
         self.reset()
 
         self.set_up_game()
@@ -281,7 +291,10 @@ class Environment():
                 break
         
         # Print the end stats to let the player know how they did!
-
+        print("Finished running the game")
+        pygame.quit()
+        sys.exit()
+        return
 
 if __name__ == "__main__":
     env = Environment()

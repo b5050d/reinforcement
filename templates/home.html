@@ -21,21 +21,33 @@
     "EPSILON_MIN": 0.1,
     "EPISODES": 50,
     "MAX_EPISODE_STEPS": 2000,
+
     "N_FOODS": 1,
+    "RANDOM_TYPE": 0,
     "ARENA_SIZE": 20,
     "PLAYER_SPEED": 1,
     "FPS": 12,
     "RENDER_MULT": 10,
     "PLAYER_RADIUS": 0.5,
+    
     "DUMMY_VAR": 0
     }
     </textarea>
     <br>
     <button onclick="submitConfig()">Run a new Experiment</button>
+    <button onclick="playGame()">Play Game</button>
     <script>
     function submitConfig() {
     const raw = document.getElementById('configInput').value;
     fetch("/run_training_loop", {
+        method: "POST",
+        body: raw,
+        headers: { "Content-Type": "application/json" }
+    });
+    }
+    function playGame() {
+    const raw = document.getElementById('configInput').value;
+    fetch("/play_game", {
         method: "POST",
         body: raw,
         headers: { "Content-Type": "application/json" }

@@ -35,7 +35,6 @@ class AppFactory:
 # TODO - Implement a plot that will plot the selected experiement's loss / rewards
 
 
-
 if __name__ == "__main__":
     factory = AppFactory()
     app = factory.create_app()
