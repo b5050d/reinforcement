@@ -21,7 +21,7 @@ class Environment():
     interact with this in order to play the game
     """
 
-    def __init__(self, config):
+    def __init__(self, config, replay):
         """
         Set up the environment
         """

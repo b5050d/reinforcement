@@ -21,12 +21,8 @@ def training_loop(config, experiment_id):
     """
     Train the model on the environment
     """
-    print("heres the config")
-    print(config)
-
-    return
     # Establish the Environment to re-use
-    env = Environment()
+    env = Environment(config)
 
     total_steps = 0
     replay_buffer = deque(maxlen=10000)
@@ -115,10 +111,21 @@ def training_loop(config, experiment_id):
         print(f"Episode {episode}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")
         print(f"Episode Run time = {round(time.time() - start_time, 3)}")
 
-        add_training_run(DATABASE_PATH, experiment_id, episode, round(epsilon,3), reward, None, None)
 
         # Save the run every so often
+        if episode%config['SAVE_TRAINING_INTERVAL'] == 0:
+            # Save the Training Run
+            replay_config = config
+
+            add_replay(DATABASE_PATH, experiment_id, config)
+        add_training_run(DATABASE_PATH, experiment_id, episode, round(epsilon,3), reward, None, None)
+
+
+
+
         if episode%config['EVALUATION_INTERVAL'] == 0:
+            # Run the Evaluation Loop
+
             evaluation_loop(config['EXPERIMENT_DESCRIPTION'], env, episode, nnet)
             pygame.quit()
 
