@@ -122,6 +122,30 @@ def set_up_routes(app):
         return jsonify({"status": "ok"})
 
 
+    @app.route("/replay_<replay_id>", methods=["POST"])
+    def replay(replay_id):
+        # TODO - Should add the food locations to the config
+        # If using random, then the food locations will be different
+        # from the replay.
+        print(f"Got the replay: {replay_id}")
+
+        replay_file_path = get_replay_path(REPLAY_PATH, replay_id)
+        if os.path.exists(replay_file_path):
+
+            # Load the replay into a dict
+            with open(replay_file_path, "r") as f:
+                replay_dict = json.load(f)
+
+            game_thread = Environment(replay_dict)
+
+            new_thread = Thread(target=game_thread.play, args=(True,), daemon=True)
+
+            new_thread.start()
+        else:
+            # TODO - Flash that the replay was not found
+            pass
+        return jsonify({"status": "ok"})
+
 # Kind of need some way to do the config
 # Kind of need some way to start the training threads in the background and
 # make sure they don't di

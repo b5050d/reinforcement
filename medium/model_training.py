@@ -14,7 +14,7 @@ from medium.model_management import save_ai_run
 from medium.environment import Environment
 from medium.model import DQN
 from database_ops import *
-from config import DATABASE_PATH
+from config import DATABASE_PATH, REPLAY_PATH
 
 
 def training_loop(config, experiment_id):
@@ -115,12 +115,15 @@ def training_loop(config, experiment_id):
         # Save the run every so often
         if episode%config['SAVE_TRAINING_INTERVAL'] == 0:
             # Save the Training Run
-            replay_config = config
+            replay_config = config.copy()
 
-            add_replay(DATABASE_PATH, experiment_id, config)
-        add_training_run(DATABASE_PATH, experiment_id, episode, round(epsilon,3), reward, None, None)
+            replay_config["ACTIONS"] = action_history
 
+            replay_id = add_replay(DATABASE_PATH, experiment_id, replay_config, REPLAY_PATH)
+        else:
+            replay_id = None
 
+        add_training_run(DATABASE_PATH, experiment_id, episode, round(epsilon,3), reward, replay_id, None)
 
 
         if episode%config['EVALUATION_INTERVAL'] == 0:

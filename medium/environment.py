@@ -21,7 +21,7 @@ class Environment():
     interact with this in order to play the game
     """
 
-    def __init__(self, config, replay):
+    def __init__(self, config):
         """
         Set up the environment
         """
@@ -259,6 +259,12 @@ class Environment():
         Play the Game
         """
         print("Entered the Play Method")
+        if ai:
+            print("Selected the AI replay mode")
+            assert "ACTIONS" in self.config, "Error, could not find the actions"
+            actions = self.config["ACTIONS"]
+            action_index = 0
+
         self.reset()
 
         self.set_up_game()
@@ -267,13 +273,13 @@ class Environment():
         total_reward = 0
         while not stop_condition:
             # Check for pygame events
-            if not ai:
-                self.check_for_pygame_events()
+            # if not ai:
+            self.check_for_pygame_events()
 
             # Take an action
             if ai:
-                pass
-                raise NotImplementedError
+                action = actions[action_index]
+                action_index+=1
             else:
                 action = self.handle_keypresses()
 
@@ -295,7 +301,15 @@ class Environment():
         pygame.quit()
         sys.exit()
         return
+    
+
 
 if __name__ == "__main__":
-    env = Environment()
-    env.play()
+    pass
+    # env = Environment()
+    # env.play()
+
+
+    # new_thread = Thread(target=game_thread.play, args=(True,), daemon=True)
+
+    # new_thread.start()

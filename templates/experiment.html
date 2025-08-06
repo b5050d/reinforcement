@@ -29,7 +29,16 @@
                 <td>{{ train[2] }}</td>
                 <td>{{ train[3] }}</td>
                 <td>{{ train[4] }}</td>
-                <td>{{ train[5] }}</td>
+                {% if train[5] == -1 %}
+                    <td>{{ train[5] }}</td>
+                {% else %}
+                    <td>
+                        <!-- <form method="POST" action="/replay_{{ train[5] }}">
+                            <button type="submit">View</button>
+                        </form> -->
+                        <button onclick="sendReplay({{ train[5] }})">View Replay</button>
+                    </td>
+                {% endif %}
                 <td>{{ train[6] }}</td>
             </tr>
             {% endfor %}
@@ -64,5 +73,25 @@
         </tbody>
     </table>
 </div>
+
+<script>
+function sendReplay(id) {
+    fetch(`/replay_${id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            // Include this if your server expects CSRF token
+            // 'X-CSRFToken': getCSRFToken() 
+        },
+        body: JSON.stringify({})  // or include actual data if needed
+    }).then(response => {
+        if (!response.ok) {
+            console.error("Request failed:", response.status);
+        }
+    }).catch(err => {
+        console.error("Fetch error:", err);
+    });
+}
+</script>
 
 {% endblock %}
