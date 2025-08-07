@@ -116,61 +116,62 @@ def training_loop(config, experiment_id):
         if episode%config['SAVE_TRAINING_INTERVAL'] == 0:
             # Save the Training Run
             replay_config = config.copy()
-
             replay_config["ACTIONS"] = action_history
 
             replay_id = add_replay(DATABASE_PATH, experiment_id, replay_config, REPLAY_PATH)
         else:
             replay_id = None
 
-        add_training_run(DATABASE_PATH, experiment_id, episode, round(epsilon,3), reward, replay_id, None)
-
+        add_training_run(DATABASE_PATH, experiment_id, episode, round(epsilon,3), round(total_reward,3), replay_id, None)
 
         if episode%config['EVALUATION_INTERVAL'] == 0:
             # Run the Evaluation Loop
+            eval_actions, eval_reward, = evaluation_loop(config, nnet)
+            replay_config = config.copy()
+            replay_config["ACTIONS"] = eval_actions
 
-            evaluation_loop(config['EXPERIMENT_DESCRIPTION'], env, episode, nnet)
+            replay_id = add_replay(DATABASE_PATH, experiment_id, replay_config, REPLAY_PATH)
+
+            add_evaluation_run(DATABASE_PATH, experiment_id, episode, round(eval_reward,3), replay_id, None)
+
             pygame.quit()
 
 
-def evaluation_loop(run_tag, env, ep, nnet):
+def evaluation_loop(config, nnet):
     """
     Simple Evaluation Loop for the training of our model
     """
     print("Running Evaluation Loop")
+
+    env = Environment(config)
+
     nnet.eval()
 
-    episodes = 1
     total_reward = 0
-    for epi in range(episodes):
-        # Reset the env
-        state = env.reset()
-        foods = env.foods
-        done = False
 
-        action_history = []
-        ep_reward = 0
-        # while not done:
-        for t in range(2000):
-            with torch.no_grad():
-                state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-                q_values = nnet(state_tensor)
-                action = torch.argmax(q_values).item()
-            action_history.append(action)
-            state, reward, done = env.step(action)
-            ep_reward += reward
-            if done:
-                break
+    # Reset the env
+    state = env.reset()
 
-        total_reward += ep_reward
+    done = False
 
-    avg_reward = total_reward / episodes
-    print(f"[Eval] Avg reward over {episodes} eval runs: {avg_reward:.2f}")
+    action_history = []
+    # while not done:
+    for t in range(2000):
+        with torch.no_grad():
+            state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+            q_values = nnet(state_tensor)
+            action = torch.argmax(q_values).item()
+        action_history.append(action)
+        state, reward, done = env.step(action)
+        total_reward += reward
+        if done:
+            break
 
-    # Save a run
-    save_ai_run(foods, action_history, ep, run_tag)
+    print(f"[Eval] Avg reward over {1} eval runs: {total_reward:.2f}")
 
     nnet.train() # Set it back in training mode
+
+    return action_history, total_reward
 
 
 if __name__ == "__main__":

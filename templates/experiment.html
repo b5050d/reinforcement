@@ -33,9 +33,6 @@
                     <td>{{ train[5] }}</td>
                 {% else %}
                     <td>
-                        <!-- <form method="POST" action="/replay_{{ train[5] }}">
-                            <button type="submit">View</button>
-                        </form> -->
                         <button onclick="sendReplay({{ train[5] }})">View Replay</button>
                     </td>
                 {% endif %}
@@ -60,13 +57,19 @@
             </tr>
         </thead>
         <tbody>
-            {% for eval in evaluation_table %}
+            {% for eval in evaluation_runs %}
             <tr>
                 <td>{{ eval[0] }}</td>
                 <td>{{ eval[1] }}</td>
                 <td>{{ eval[2] }}</td>
                 <td>{{ eval[3] }}</td>
-                <td>{{ eval[4] }}</td>
+                {% if eval[4] == -1 %}
+                    <td>{{ eval[4] }}</td>
+                {% else %}
+                    <td>
+                        <button onclick="sendReplay({{ eval[4] }})">View Replay</button>
+                    </td>
+                {% endif %}
                 <td>{{ eval[5] }}</td>
             </tr>
             {% endfor %}

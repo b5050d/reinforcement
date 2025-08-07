@@ -186,7 +186,7 @@ class Environment():
         """
         Perform an Action and Progress the game
         """
-        reward = 0
+        reward = -.01
 
         # Perform action
         self.perform_action(action)
