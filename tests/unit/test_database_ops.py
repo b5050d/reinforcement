@@ -158,14 +158,14 @@ def test_add_training_run(tmp_path):
 
     # Add a run to a non existing database
     with pytest.raises(FileNotFoundError):
-        add_training_run(db_path, 1, 0, 0.9, 17, None, None)
+        add_training_run(db_path, 1, 0, 0.9, 17, 4.9, None, None)
 
     # Create the database so it exists
     add_experiment(db_path, "Testing")
 
     # Add a training when the experiment does not exist
     with pytest.raises(Exception):
-        add_training_run(db_path, 2, 0, 0.9, 17, None, None)
+        add_training_run(db_path, 2, 0, 0.9, 17, 4.9, None, None)
 
     ans = get_all_training_runs(db_path)
     assert ans == []
@@ -175,32 +175,32 @@ def test_add_training_run(tmp_path):
 
     # Add a training run when the replayid does not exist
     with pytest.raises(Exception):
-        add_training_run(db_path, 2, 0, 0.9, 17, 8, None)
+        add_training_run(db_path, 2, 0, 0.9, 17, 4.9, 8, None)
 
     # Add a training run when the id does not exist
     with pytest.raises(Exception):
-        add_training_run(db_path, 2, 0, 0.9, 17, None, 9)
+        add_training_run(db_path, 2, 0, 0.9, 17, 4.9, None, 9)
 
     # Add a training run when there is no Training table
-    add_training_run(db_path, 1, 0, 0.9, 17, None, None)
+    add_training_run(db_path, 1, 0, 0.9, 17, 4.9, None, None)
 
     ans = get_all_training_runs(db_path)
     assert len(ans) == 1
 
     add_replay(db_path, 1, {"test": 1}, replay_folder)
-    add_training_run(db_path, 2, 0, 0.9, 17, 1, None)
+    add_training_run(db_path, 2, 0, 0.9, 17, 4.9, 1, None)
     ans = get_all_training_runs(db_path)
     assert len(ans) == 2
 
     sample_model = DQN()
     add_model(db_path, 1, sample_model, model_folder)
-    add_training_run(db_path, 2, 0, 0.9, 17, None, 1)
+    add_training_run(db_path, 2, 0, 0.9, 17, 4.9, None, 1)
     ans = get_all_training_runs(db_path)
     assert len(ans) == 3
 
     add_replay(db_path, 1, {"test": 1}, replay_folder)
     add_model(db_path, 1, sample_model, model_folder)
-    add_training_run(db_path, 2, 0, 0.9, 17, 2, 2)
+    add_training_run(db_path, 2, 0, 0.9, 17, 4.9, 2, 2)
     ans = get_all_training_runs(db_path)
     assert len(ans) == 4
 
@@ -212,14 +212,14 @@ def test_add_evaluation_run(tmp_path):
 
     # Add a run to a non existing database
     with pytest.raises(FileNotFoundError):
-        add_evaluation_run(db_path, 1, 0, 17, None, None)
+        add_evaluation_run(db_path, 1, 0, 17, 4.9, None, None)
 
     # Create the database so it exists
     add_experiment(db_path, "Testing")
 
     # Add a training when the experiment does not exist
     with pytest.raises(Exception):
-        add_evaluation_run(db_path, 2, 0, 17, None, None)
+        add_evaluation_run(db_path, 2, 0, 17, 4.9, None, None)
 
     ans = get_all_training_runs(db_path)
     assert ans == []
@@ -229,32 +229,32 @@ def test_add_evaluation_run(tmp_path):
 
     # Add a training run when the replayid does not exist
     with pytest.raises(Exception):
-        add_evaluation_run(db_path, 2, 0, 17, 8, None)
+        add_evaluation_run(db_path, 2, 0, 17, 4.9, 8, None)
 
     # Add a training run when the id does not exist
     with pytest.raises(Exception):
-        add_evaluation_run(db_path, 2, 0, 17, None, 9)
+        add_evaluation_run(db_path, 2, 0, 17, 4.9, None, 9)
 
     # Add a training run when there is no Training table
-    add_evaluation_run(db_path, 1, 0, 17, None, None)
+    add_evaluation_run(db_path, 1, 0, 17, 4.9, None, None)
 
     ans = get_all_evaluation_runs(db_path)
     assert len(ans) == 1
 
     add_replay(db_path, 1, {"test": 1}, replay_folder)
-    add_evaluation_run(db_path, 2, 0, 17, 1, None)
+    add_evaluation_run(db_path, 2, 0, 17, 4.9, 1, None)
     ans = get_all_evaluation_runs(db_path)
     assert len(ans) == 2
 
     sample_model = DQN()
     add_model(db_path, 1, sample_model, model_folder)
-    add_evaluation_run(db_path, 2, 0, 17, None, 1)
+    add_evaluation_run(db_path, 2, 0, 17, 4.9, None, 1)
     ans = get_all_evaluation_runs(db_path)
     assert len(ans) == 3
 
     add_replay(db_path, 1, {"test": 1}, replay_folder)
     add_model(db_path, 1, sample_model, model_folder)
-    add_evaluation_run(db_path, 2, 0, 17, 2, 2)
+    add_evaluation_run(db_path, 2, 0, 17, 4.9, 2, 2)
     ans = get_all_evaluation_runs(db_path)
     assert len(ans) == 4
 

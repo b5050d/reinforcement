@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS Training (
     episode INTEGER,
     epsilon REAL,
     reward REAL,
+    runtime REAL,
     replay_id INTEGER,
     model_id INTEGER,
     FOREIGN KEY (experiment_id) REFERENCES Experiment(id) ON DELETE CASCADE
@@ -73,6 +74,7 @@ CREATE TABLE IF NOT EXISTS Evaluation (
     experiment_id INTEGER,
     episode INTEGER,
     reward REAL,
+    runtime REAL,
     replay_id INTEGER,
     model_id INTEGER,
     FOREIGN KEY (experiment_id) REFERENCES Experiment(id) ON DELETE CASCADE
@@ -95,11 +97,11 @@ INSERT INTO Replay (experiment_id) VALUES (?)
 
 
 insert_training_cmd = """
-INSERT INTO Training (experiment_id, episode, epsilon, reward, replay_id, model_id) VALUES (?,?,?,?,?,?)
+INSERT INTO Training (experiment_id, episode, epsilon, reward, runtime, replay_id, model_id) VALUES (?,?,?,?,?,?,?)
 """
 
 insert_evaluation_cmd = """
-INSERT INTO Evaluation (experiment_id, episode, reward, replay_id, model_id) VALUES (?,?,?,?,?)
+INSERT INTO Evaluation (experiment_id, episode, reward, runtime, replay_id, model_id) VALUES (?,?,?,?,?,?)
 """
 
 
@@ -267,7 +269,14 @@ def add_replay(database_path, experiment, replay_dict, replay_folder):
 
 
 def add_training_run(
-    database_path, experiment, episode, epsilon, reward, replay_id=None, model_id=None
+    database_path,
+    experiment,
+    episode,
+    epsilon,
+    reward,
+    runtime,
+    replay_id=None,
+    model_id=None,
 ):
     """
     Adds the training run stats to the Training database table
@@ -320,13 +329,13 @@ def add_training_run(
         # Create the Training table if it doesn't exist yet
         cursor.execute(
             insert_training_cmd,
-            (experiment, episode, epsilon, reward, replay_id, model_id),
+            (experiment, episode, epsilon, reward, runtime, replay_id, model_id),
         )
         connection.commit()
 
 
 def add_evaluation_run(
-    database_path, experiment, episode, reward, replay_id=None, model_id=None
+    database_path, experiment, episode, reward, runtime, replay_id=None, model_id=None
 ):
     """
     Adds an evaluation run to the Evaluation database table
@@ -376,7 +385,8 @@ def add_evaluation_run(
 
         # Create the Training table if it doesn't exist yet
         cursor.execute(
-            insert_evaluation_cmd, (experiment, episode, reward, replay_id, model_id)
+            insert_evaluation_cmd,
+            (experiment, episode, reward, runtime, replay_id, model_id),
         )
         connection.commit()
 

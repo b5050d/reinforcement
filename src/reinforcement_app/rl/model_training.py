@@ -114,7 +114,8 @@ def training_loop(config, experiment_id):
 
         epsilon = max(config["EPSILON_MIN"], epsilon * config["EPSILON_DECAY"])
         print(f"Episode {episode}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")
-        print(f"Episode Run time = {round(time.time() - start_time, 3)}")
+        runtime = round(time.time() - start_time, 3)
+        print(f"Episode Run time = {runtime}")
 
         # Save the run every so often
         if episode % config["SAVE_TRAINING_INTERVAL"] == 0:
@@ -134,6 +135,7 @@ def training_loop(config, experiment_id):
             episode,
             round(epsilon, 3),
             round(total_reward, 3),
+            runtime,
             replay_id,
             None,
         )
@@ -143,6 +145,7 @@ def training_loop(config, experiment_id):
             (
                 eval_actions,
                 eval_reward,
+                runtime,
             ) = evaluation_loop(config, nnet)
             replay_config = config.copy()
             replay_config["ACTIONS"] = eval_actions
@@ -156,6 +159,7 @@ def training_loop(config, experiment_id):
                 experiment_id,
                 episode,
                 round(eval_reward, 3),
+                runtime,
                 replay_id,
                 None,
             )
@@ -181,7 +185,7 @@ def evaluation_loop(config, nnet):
     done = False
 
     action_history = []
-    # while not done:
+    start_time = time.time()
     for t in range(2000):
         with torch.no_grad():
             state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
@@ -192,12 +196,12 @@ def evaluation_loop(config, nnet):
         total_reward += reward
         if done:
             break
-
+    run_time = round(time.time() - start_time, 3)
     print(f"[Eval] Avg reward over {1} eval runs: {total_reward:.2f}")
 
     nnet.train()  # Set it back in training mode
 
-    return action_history, total_reward
+    return action_history, total_reward, run_time
 
 
 if __name__ == "__main__":

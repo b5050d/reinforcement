@@ -17,6 +17,7 @@
                 <th>Episode</th>
                 <th>Epsilon</th>
                 <th>Reward</th>
+                <th>Run Time</th>
                 <th>Replay</th>
                 <th>Model ID</th>
             </tr>
@@ -29,14 +30,15 @@
                 <td>{{ train[2] }}</td>
                 <td>{{ train[3] }}</td>
                 <td>{{ train[4] }}</td>
-                {% if train[5] == -1 %}
-                    <td>{{ train[5] }}</td>
+                <td>{{ train[5] }}</td>
+                {% if train[6] == -1 %}
+                    <td>{{ train[6] }}</td>
                 {% else %}
                     <td>
-                        <button onclick="sendReplay({{ train[5] }})">View Replay</button>
+                        <button onclick="sendReplay({{ train[6] }})">View Replay</button>
                     </td>
                 {% endif %}
-                <td>{{ train[6] }}</td>
+                <td>{{ train[7] }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -52,6 +54,7 @@
                 <th>Experiment ID</th>
                 <th>Episode</th>
                 <th>Reward</th>
+                <th>Run Time</th>
                 <th>Replay</th>
                 <th>Model ID</th>
             </tr>
@@ -63,14 +66,15 @@
                 <td>{{ eval[1] }}</td>
                 <td>{{ eval[2] }}</td>
                 <td>{{ eval[3] }}</td>
-                {% if eval[4] == -1 %}
-                    <td>{{ eval[4] }}</td>
+                <td>{{ eval[4] }}</td>
+                {% if eval[5] == -1 %}
+                    <td>{{ eval[5] }}</td>
                 {% else %}
                     <td>
-                        <button onclick="sendReplay({{ eval[4] }})">View Replay</button>
+                        <button onclick="sendReplay({{ eval[5] }})">View Replay</button>
                     </td>
                 {% endif %}
-                <td>{{ eval[5] }}</td>
+                <td>{{ eval[6] }}</td>
             </tr>
             {% endfor %}
         </tbody>
