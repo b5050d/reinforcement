@@ -1,8 +1,5 @@
+from simulation import pick_light_location, pick_spawn_point
 
-from simulation import (
-    pick_light_location,
-    pick_spawn_point
-)
 
 def test_pick_light_location():
     for i in range(10):

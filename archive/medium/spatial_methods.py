@@ -7,7 +7,7 @@ import numpy as np
 
 
 def normalize_delta(span, delta):
-    ans = (delta / (2*span)) + (.5)
+    ans = (delta / (2 * span)) + (0.5)
     if ans < 0:
         return 0
     elif ans > 1:

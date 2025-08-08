@@ -4,19 +4,17 @@ import torch.optim as optim
 import random
 from collections import deque
 
+
 class DQN(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = nn.Sequential(
-            nn.Linear(2, 64),
-            nn.ReLU(),
-            nn.Linear(64, 64),
-            nn.ReLU(),
-            nn.Linear(64, 4)
+            nn.Linear(2, 64), nn.ReLU(), nn.Linear(64, 64), nn.ReLU(), nn.Linear(64, 4)
         )
 
     def forward(self, x):
         return self.model(x)
+
 
 env = GridEnv()
 net = DQN()
@@ -31,15 +29,17 @@ epsilon_decay = 0.995
 epsilon_min = 0.1
 episodes = 500
 
-for ep in range(episodes): # Number of Episodes
+for ep in range(episodes):  # Number of Episodes
     state = env.reset()
     total_reward = 0
 
     for t in range(200):  # Number of steps in a game
-        if random.random() < epsilon: # Every so often, go ahead and perform a random action
+        if (
+            random.random() < epsilon
+        ):  # Every so often, go ahead and perform a random action
             action = random.randint(0, 3)
         else:
-            with torch.no_grad(): # no gradienet
+            with torch.no_grad():  # no gradienet
                 q_vals = net(torch.tensor(state, dtype=torch.float32).unsqueeze(0))
                 action = torch.argmax(q_vals).item()
 

@@ -1,6 +1,6 @@
 difference = -1.4
 ARENA_SIZE = 300
-# min_euclid = 
+# min_euclid =
 
 from matplotlib import pyplot as plt
 
@@ -10,10 +10,9 @@ rs = []
 for m in mines:
     # reward = -.1 * difference * (((ARENA_SIZE*.5) - m)/(ARENA_SIZE*.5))
     # Linear
-    reward = ((-.1/ARENA_SIZE) * m) + .1
+    reward = ((-0.1 / ARENA_SIZE) * m) + 0.1
 
     # Exponential Decay
-    
 
     print(reward)
 
@@ -22,8 +21,3 @@ for m in mines:
 plt.plot(mines, rs)
 plt.grid()
 plt.show()
-
-
-
-
-

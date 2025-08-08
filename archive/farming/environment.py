@@ -1,4 +1,3 @@
-
 import pygame
 import numpy as np
 import os
@@ -22,18 +21,19 @@ farm5_path = os.path.join(resource_folder, "farm_5.png")
 grass_path = os.path.join(resource_folder, "grass_static.png")
 stone_path = os.path.join(resource_folder, "stone.png")
 
-SIZE_MULT = 100 # FOR DISPLAY
+SIZE_MULT = 100  # FOR DISPLAY
 GREEN = (100, 200, 100)
 # PLAYER_POS = [WIDTH // 2, HEIGHT // 2]
 PLAYER_SPEED = 1
 FPS = 10
+
 
 class Environment:
     def __init__(self):
         self.reset()
 
     def reset(self):
-        self.player_pos = [1,1]
+        self.player_pos = [1, 1]
         self.seed_count = 0
         self.harvested_count = 0
         self.farm_tiles = [-1, -1, -1]
@@ -43,34 +43,34 @@ class Environment:
         """
         Take an action
         """
-        if action == 0:  #up
-            self.player_pos[1]-=PLAYER_SPEED
-        elif action == 1: # Upper Left
-            self.player_pos[0]-=PLAYER_SPEED
-            self.player_pos[1]-=PLAYER_SPEED
-        elif action == 2: # Left
-            self.player_pos[0]-=PLAYER_SPEED
-        elif action == 3: # Down Left
-            self.player_pos[0]-=PLAYER_SPEED
-            self.player_pos[1]+=PLAYER_SPEED
-        elif action == 4: # Down
-            self.player_pos[1]+=PLAYER_SPEED
-        elif action == 5: # Down Right
-            self.player_pos[0]+=PLAYER_SPEED
-            self.player_pos[1]+=PLAYER_SPEED
-        elif action == 6: # Right
-            self.player_pos[0]+=PLAYER_SPEED
-        elif action == 7: # Up Right
-            self.player_pos[0]+=PLAYER_SPEED
-            self.player_pos[1]-=PLAYER_SPEED
-        elif action == 8: # Harvest
+        if action == 0:  # up
+            self.player_pos[1] -= PLAYER_SPEED
+        elif action == 1:  # Upper Left
+            self.player_pos[0] -= PLAYER_SPEED
+            self.player_pos[1] -= PLAYER_SPEED
+        elif action == 2:  # Left
+            self.player_pos[0] -= PLAYER_SPEED
+        elif action == 3:  # Down Left
+            self.player_pos[0] -= PLAYER_SPEED
+            self.player_pos[1] += PLAYER_SPEED
+        elif action == 4:  # Down
+            self.player_pos[1] += PLAYER_SPEED
+        elif action == 5:  # Down Right
+            self.player_pos[0] += PLAYER_SPEED
+            self.player_pos[1] += PLAYER_SPEED
+        elif action == 6:  # Right
+            self.player_pos[0] += PLAYER_SPEED
+        elif action == 7:  # Up Right
+            self.player_pos[0] += PLAYER_SPEED
+            self.player_pos[1] -= PLAYER_SPEED
+        elif action == 8:  # Harvest
             # Check the state of the tile we are on
             print("Harvesting")
             # Check if we are on grass
             if self.player_pos[0] == 2:
-                if random.random() <= .1:
+                if random.random() <= 0.1:
                     print("Found a Seed!")
-                    self.seed_count+=1
+                    self.seed_count += 1
                 # This is a grass tile
             elif self.player_pos[0] == 1:
                 # This is a stone tile
@@ -81,13 +81,13 @@ class Environment:
                 farm_idx = self.player_pos[1]
                 if self.farm_tiles[farm_idx] == 5:
                     print("Yay Fully harvested!")
-                    self.harvested_count+=1
+                    self.harvested_count += 1
                 elif self.farm_tiles[farm_idx] > 0:
                     # Destroy the plant
                     print("Plant was too immature! you got nothing")
                 self.farm_tiles[farm_idx] = -1
-        
-        elif action == 9: # Plant
+
+        elif action == 9:  # Plant
             if self.player_pos[0] == 0:
                 # this is a farming tile
                 if self.seed_count == 0:
@@ -97,7 +97,7 @@ class Environment:
                     print("Planted Seed")
                     farm_idx = self.player_pos[1]
                     # Plant the seed
-                    self.seed_count-=1
+                    self.seed_count -= 1
                     self.farm_tiles[farm_idx] = 0
                     self.farm_tiles_counters[farm_idx] = 10
         else:
@@ -106,7 +106,6 @@ class Environment:
         # clamp to grid bounds [0, 2]
         self.player_pos[0] = max(0, min(2, self.player_pos[0]))
         self.player_pos[1] = max(0, min(2, self.player_pos[1]))
-
 
         # Update all of the farm files
         for i in range(3):
@@ -119,14 +118,17 @@ class Environment:
                 else:
                     self.farm_tiles_counters[i] -= 1
 
-
-
     def handle_keypresses(self):
         """
         Handle the Keypresses
         """
         keys = pygame.key.get_pressed()
-        key_flags = [keys[pygame.K_w], keys[pygame.K_a], keys[pygame.K_s],  keys[pygame.K_d]]
+        key_flags = [
+            keys[pygame.K_w],
+            keys[pygame.K_a],
+            keys[pygame.K_s],
+            keys[pygame.K_d],
+        ]
         value = 0
         for i, bit in enumerate(reversed(key_flags)):
             value |= bit << i
@@ -169,7 +171,7 @@ class Environment:
 
         font = pygame.font.SysFont(None, 24)
 
-        screen = pygame.display.set_mode((SIZE_MULT*3, SIZE_MULT*3))
+        screen = pygame.display.set_mode((SIZE_MULT * 3, SIZE_MULT * 3))
         pygame.display.set_caption("Farming")
 
         # Load sprite
@@ -177,13 +179,13 @@ class Environment:
         player_rect = player_image.get_rect(center=(SIZE_MULT // 2, SIZE_MULT // 2))
 
         stone_image = pygame.image.load(stone_path).convert_alpha()
-        stone_rect_0 = stone_image.get_rect(center = (SIZE_MULT, SIZE_MULT))
+        stone_rect_0 = stone_image.get_rect(center=(SIZE_MULT, SIZE_MULT))
 
         grass_image = pygame.image.load(grass_path).convert_alpha()
-        grass_rect_0 = grass_image.get_rect(center = (SIZE_MULT, SIZE_MULT))
+        grass_rect_0 = grass_image.get_rect(center=(SIZE_MULT, SIZE_MULT))
 
         farm_image = pygame.image.load(farm_path).convert_alpha()
-        farm_rect_0 = farm_image.get_rect(center = (SIZE_MULT, SIZE_MULT))
+        farm_rect_0 = farm_image.get_rect(center=(SIZE_MULT, SIZE_MULT))
 
         farm_image_0 = pygame.image.load(farm0_path).convert_alpha()
         farm_image_1 = pygame.image.load(farm1_path).convert_alpha()
@@ -199,7 +201,7 @@ class Environment:
             farm_image_3,
             farm_image_4,
             farm_image_5,
-            farm_image
+            farm_image,
         ]
 
         # farm_0_image = pygame.image.load()
@@ -217,7 +219,6 @@ class Environment:
 
             # Draw the Blocks
             screen.fill(GREEN)
-
 
             # Draw the Stone
             stone_rect_0.center = (150, 50)
@@ -242,13 +243,17 @@ class Environment:
             screen.blit(farm_image_list[self.farm_tiles[2]], farm_rect_0)
 
             # Draw Player
-            player_rect.center = ((int(self.player_pos[0])+.5)*SIZE_MULT, (int(self.player_pos[1])+.5)*SIZE_MULT)
+            player_rect.center = (
+                (int(self.player_pos[0]) + 0.5) * SIZE_MULT,
+                (int(self.player_pos[1]) + 0.5) * SIZE_MULT,
+            )
             screen.blit(player_image, player_rect)
 
             clock.tick(FPS)
 
             # Update display
             pygame.display.flip()
+
 
 if __name__ == "__main__":
     a = Environment()

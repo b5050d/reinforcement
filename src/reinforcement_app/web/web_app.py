@@ -2,9 +2,8 @@
 Application Frontend
 """
 
-
 from flask import Flask
-from web_app_routes import set_up_routes
+from reinforcement_app.web.web_app_routes import set_up_routes
 
 
 class AppFactory:
@@ -38,8 +37,4 @@ class AppFactory:
 if __name__ == "__main__":
     factory = AppFactory()
     app = factory.create_app()
-    app.run(
-        host="127.0.0.1",
-        port=5000,
-        debug=True
-    )
+    app.run(host="127.0.0.1", port=5000, debug=True)

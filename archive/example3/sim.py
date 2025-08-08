@@ -22,12 +22,11 @@ class Board:
         self.vec = []
         for i in range(self.size):
             self.vec.append(np.random.randint(0, 2))
-        
+
         return self.vec.copy()
 
     def flip_bit(self, action):
         return int(not self.vec[action])
-
 
     def step(self, action):
         self.vec[action] = self.flip_bit(action)
@@ -37,7 +36,7 @@ class Board:
             done = True
         else:
             done = False
-        
+
         reward = 1.0 if done else REWARD_PENALTY
         return self.vec.copy(), reward, done
 
@@ -52,12 +51,12 @@ class DQN(nn.Module):
             nn.ReLU(),
             nn.Linear(node_num, node_num),
             nn.ReLU(),
-            nn.Linear(node_num, SIZE)
+            nn.Linear(node_num, SIZE),
         )
 
     def forward(self, x):
         return self.model(x)
-    
+
 
 game = Board()
 nnet = DQN()
@@ -69,7 +68,7 @@ batch_size = 64
 gamma = 0.99
 epsilon = 1.0
 epsilon_decay = 0.995
-epsilon_min = .1
+epsilon_min = 0.1
 episodes = EPISODES
 max_steps = MAX_STEPS
 
@@ -84,7 +83,7 @@ for ep in range(episodes):
 
     for step in range(max_steps):
         if random.random() < epsilon:
-            action = random.randint(0, SIZE-1)
+            action = random.randint(0, SIZE - 1)
         else:
             with torch.no_grad():
                 q_vals = nnet(torch.tensor(state, dtype=torch.float32).unsqueeze(0))
@@ -114,8 +113,8 @@ for ep in range(episodes):
 
             with torch.no_grad():
                 max_q_s2 = nnet(s2).max(1)[0]
-                target = r + gamma * max_q_s2 * (1-d)
-            
+                target = r + gamma * max_q_s2 * (1 - d)
+
             loss = loss_fn(q_val, target)
             optimizer.zero_grad()
             loss.backward()
@@ -127,7 +126,7 @@ for ep in range(episodes):
 
     if not done:
         steps_taken.append(max_steps)
-        total_reward=0
+        total_reward = 0
 
     epsilon = max(epsilon_min, epsilon * epsilon_decay)
     print(f"Episode {ep}, reward: {total_reward:.2f}, epsilon: {epsilon:.3f}")

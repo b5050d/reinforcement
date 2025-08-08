@@ -3,7 +3,6 @@ Contains methods for generation of our
 state space
 """
 
-
 import math
 import numpy as np
 from medium.spatial_methods import find_x_y_delta, find_euclidean_distance
@@ -17,8 +16,10 @@ def get_random_matrix(size, n_foods, seed):
     matrix = np.zeros((size, size))
 
     food_positions = get_random_food_positions(size, n_foods, seed)
-    
+
     # Great - now we can go ahead and add them to the matrix
+
+    return matrix, food_positions
 
 
 # TODO - Randomize the matrix
@@ -26,7 +27,7 @@ def further_randomize_matrix():
     """
     Useful when we want to slighly randomize off an existing pattern
     """
-    pass 
+    pass
 
 
 def get_random_food_positions(size, n_foods, seed):
@@ -36,11 +37,9 @@ def get_random_food_positions(size, n_foods, seed):
     for i in range(n_foods):
         # Generate a new food position
         # TODO - make sure the food dont appear on the very edge of the map
-        try:
-            x = np.random.randint(0, size)
-            y = np.random.randint(0, size)
-        except:
-            raise Exception("Already in the ")
+        x = np.random.randint(0, size)
+        y = np.random.randint(0, size)
+
         food_positions.append((x, y))
     return food_positions
 
@@ -51,7 +50,7 @@ def heading_from_dxdy(dx, dy):
     """
     angle = math.atan2(dx, dy)  # Returns angle in range [-π, π]
     if angle < 0:
-        angle += 2 * math.pi     # Convert to [0, 2π)
+        angle += 2 * math.pi  # Convert to [0, 2π)
     return angle
 
 
@@ -84,20 +83,18 @@ def compute_directional_signal(dx, dy, euclid):
 
     # Get the strength
     dist = euclid
-    strength = 1/(dist**.9) # signal decay
+    strength = 1 / (dist**0.9)  # signal decay
 
     # Perform Angular binning
     result = distribute_signal_to_bins(theta, strength)
-    
+
     return result
 
 
 def compute_directional_signals(player_pos, food_positions):
-    """
-    
-    """
+    """ """
     if len(food_positions) == 0:
-        return [0]*8
+        return [0] * 8
     signals = []
     for f in food_positions:
         dx, dy = find_x_y_delta(player_pos, f)
@@ -105,12 +102,12 @@ def compute_directional_signals(player_pos, food_positions):
 
         signal = compute_directional_signal(dx, dy, euclid)
         signals.append(signal)
-    
+
     summed_signal = []
     for i in range(len(signals[0])):
         sum = 0
         for s in signals:
-            sum+=s[i]
+            sum += s[i]
         summed_signal.append(sum)
 
     # normalize the summed signal

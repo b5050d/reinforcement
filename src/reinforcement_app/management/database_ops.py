@@ -2,7 +2,6 @@
 Database operation scripts
 """
 
-
 import sqlite3
 import os
 import torch
@@ -15,15 +14,18 @@ def table_exists(db_path: str, table_name: str) -> bool:
     """
     if not os.path.exists(db_path):
         return False
-    
+
     with sqlite3.connect(db_path) as connection:
         cursor = connection.cursor()
-        cursor.execute("""
-            SELECT 1 FROM sqlite_master 
+        cursor.execute(
+            """
+            SELECT 1 FROM sqlite_master
             WHERE type='table' AND name=?;
-        """, (table_name,))
+        """,
+            (table_name,),
+        )
         return cursor.fetchone() is not None
-    
+
 
 # TODO - Add config to the experiment table...
 create_experiment_table_cmd = """
@@ -191,17 +193,17 @@ def add_model(database_path, experiment, model, model_folder):
     """
     if not os.path.exists(database_path):
         raise FileNotFoundError("Database DNE, cant add model")
-    
+
     # Check that the experiment exists
     ans = get_all_experiments(database_path)
     success = False
     for item in ans:
         if item[0] == experiment:
             success = True
-    
+
     if not success:
         raise Exception("No Experiement Found")
-    
+
     create_model_table(database_path)
 
     # Add the model to the model table
@@ -227,21 +229,21 @@ def add_replay(database_path, experiment, replay_dict, replay_folder):
     """
     Saves the replay to a json file and then adds a reference to the database
 
-    returns the replay id    
+    returns the replay id
     """
     if not os.path.exists(database_path):
         raise FileNotFoundError("Database DNE, cant add model")
-    
+
     # Check that the experiment exists
     ans = get_all_experiments(database_path)
     success = False
     for item in ans:
         if item[0] == experiment:
             success = True
-    
+
     if not success:
         raise Exception("No Experiment Found")
-    
+
     create_replay_table(database_path)
 
     # Add the replay to the replay table
@@ -264,7 +266,9 @@ def add_replay(database_path, experiment, replay_dict, replay_folder):
     return replay_id
 
 
-def add_training_run(database_path, experiment, episode, epsilon, reward, replay_id=None, model_id=None):
+def add_training_run(
+    database_path, experiment, episode, epsilon, reward, replay_id=None, model_id=None
+):
     """
     Adds the training run stats to the Training database table
     """
@@ -277,16 +281,16 @@ def add_training_run(database_path, experiment, episode, epsilon, reward, replay
     for item in ans:
         if item[0] == experiment:
             success = True
-    
+
     if not success:
         raise Exception("No Experiment Found")
-    
+
     create_training_table(database_path)
-    
+
     # Check that epsilon is valid
 
     # Check that replay_id and model_id are present in the database
-    if replay_id == None:
+    if replay_id is None:
         replay_id = -1
     else:
         success = False
@@ -298,7 +302,7 @@ def add_training_run(database_path, experiment, episode, epsilon, reward, replay
         if not success:
             raise Exception("No matching Replay ID present")
 
-    if model_id == None:
+    if model_id is None:
         model_id = -1
     else:
         success = False
@@ -314,11 +318,16 @@ def add_training_run(database_path, experiment, episode, epsilon, reward, replay
         cursor = connection.cursor()
 
         # Create the Training table if it doesn't exist yet
-        cursor.execute(insert_training_cmd, (experiment, episode, epsilon, reward, replay_id, model_id))
+        cursor.execute(
+            insert_training_cmd,
+            (experiment, episode, epsilon, reward, replay_id, model_id),
+        )
         connection.commit()
 
 
-def add_evaluation_run(database_path, experiment, episode, reward, replay_id=None, model_id=None):
+def add_evaluation_run(
+    database_path, experiment, episode, reward, replay_id=None, model_id=None
+):
     """
     Adds an evaluation run to the Evaluation database table
     """
@@ -331,14 +340,14 @@ def add_evaluation_run(database_path, experiment, episode, reward, replay_id=Non
     for item in ans:
         if item[0] == experiment:
             success = True
-    
+
     if not success:
         raise Exception("No Experiment Found")
-    
+
     create_evaluation_table(database_path)
-    
+
     # Check that replay_id and model_id are present in the database
-    if replay_id == None:
+    if replay_id is None:
         replay_id = -1
     else:
         success = False
@@ -350,7 +359,7 @@ def add_evaluation_run(database_path, experiment, episode, reward, replay_id=Non
         if not success:
             raise Exception("No matching Replay ID present")
 
-    if model_id == None:
+    if model_id is None:
         model_id = -1
     else:
         success = False
@@ -366,7 +375,9 @@ def add_evaluation_run(database_path, experiment, episode, reward, replay_id=Non
         cursor = connection.cursor()
 
         # Create the Training table if it doesn't exist yet
-        cursor.execute(insert_evaluation_cmd, (experiment, episode, reward, replay_id, model_id))
+        cursor.execute(
+            insert_evaluation_cmd, (experiment, episode, reward, replay_id, model_id)
+        )
         connection.commit()
 
 
@@ -376,7 +387,7 @@ def get_all_experiments(database_path):
     """
     if not os.path.exists(database_path):
         return []
-    
+
     if not table_exists(database_path, "Experiment"):
         return []
 
@@ -393,7 +404,7 @@ def get_all_models(database_path):
     """
     if not os.path.exists(database_path):
         return []
-    
+
     if not table_exists(database_path, "Model"):
         return []
 
@@ -410,7 +421,7 @@ def get_all_replays(database_path):
     """
     if not os.path.exists(database_path):
         return []
-    
+
     if not table_exists(database_path, "Replay"):
         return []
 
@@ -427,7 +438,7 @@ def get_all_training_runs(database_path):
     """
     if not os.path.exists(database_path):
         return []
-    
+
     if not table_exists(database_path, "Training"):
         return []
 
@@ -444,7 +455,7 @@ def get_all_evaluation_runs(database_path):
     """
     if not os.path.exists(database_path):
         return []
-    
+
     if not table_exists(database_path, "Evaluation"):
         return []
 
@@ -461,17 +472,17 @@ def query_models_per_experiment(database_path, experiment_id):
 
     if not table_exists(database_path, "Model"):
         return []
-    
+
     # Is the Experiment present
     ans = get_all_experiments(database_path)
     success = False
     for item in ans:
         if item[0] == experiment_id:
             success = True
-    
+
     if not success:
         raise Exception("No Experiment Found")
-    
+
     with get_connection(database_path) as connection:
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM Model WHERE experiment_id = ?", (experiment_id,))
@@ -485,14 +496,14 @@ def query_replays_per_experiment(database_path, experiment_id):
 
     if not table_exists(database_path, "Replay"):
         return []
-    
+
     # Is the Experiment present
     ans = get_all_experiments(database_path)
     success = False
     for item in ans:
         if item[0] == experiment_id:
             success = True
-    
+
     if not success:
         raise Exception("No Experiment Found")
 
@@ -516,13 +527,15 @@ def query_training_loops_by_experiment(database_path, experiment_id):
     for item in ans:
         if item[0] == experiment_id:
             success = True
-    
+
     if not success:
         raise Exception("No Experiment Found")
-    
+
     with get_connection(database_path) as connection:
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM Training WHERE experiment_id = ?", (experiment_id,))
+        cursor.execute(
+            "SELECT * FROM Training WHERE experiment_id = ?", (experiment_id,)
+        )
         rows = cursor.fetchall()
     return rows
 
@@ -540,13 +553,15 @@ def query_evaluation_loops_by_experiment(database_path, experiment_id):
     for item in ans:
         if item[0] == experiment_id:
             success = True
-    
+
     if not success:
         raise Exception("No Experiment Found")
-    
+
     with get_connection(database_path) as connection:
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM Evaluation WHERE experiment_id = ?", (experiment_id,))
+        cursor.execute(
+            "SELECT * FROM Evaluation WHERE experiment_id = ?", (experiment_id,)
+        )
         rows = cursor.fetchall()
     return rows
 
@@ -565,16 +580,18 @@ def get_replay_path(replay_folder_path, replay_id):
     return os.path.join(replay_folder_path, f"{replay_id}.json")
 
 
-def delete_experiment(database_path, replay_folder_path, model_folder_path, experiment_id):
+def delete_experiment(
+    database_path, replay_folder_path, model_folder_path, experiment_id
+):
     """
     Delete the experiment and all ties to it
     """
     if not os.path.exists(database_path):
         raise FileNotFoundError("Database DNE, cant add model")
-    
+
     # Find all Replays associated with the experiment
     replays = query_replays_per_experiment(database_path, experiment_id)
-    
+
     # Find all Models associated with the experiment
     models = query_models_per_experiment(database_path, experiment_id)
 
@@ -597,6 +614,7 @@ def delete_experiment(database_path, replay_folder_path, model_folder_path, expe
     with get_connection(database_path) as connection:
         cursor = connection.cursor()
         cursor.execute("DELETE FROM Experiment WHERE id = ?", (experiment_id,))
+
 
 if __name__ == "__main__":
     from config import DATABASE_PATH

@@ -1,9 +1,15 @@
 torch==2.7.1
 torchaudio==2.7.1
 torchvision==0.22.1
-
 pygame==2.6.1
 
+Flask==3.1.1
+pillow==11.2.1
+numpy==2.3.1
+python-dateutil==2.9.0.post0
+matplotlib==3.10.3
+pytest==8.4.1
 
-# PyQT5 for GUI
-PyQt5==5.15.11 
+pre_commit==4.2.0
+black==25.1.0
+flake8==7.2.0

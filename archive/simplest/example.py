@@ -9,7 +9,7 @@ The states can be 0 or 1
 import numpy as np
 from matplotlib import pyplot as plt
 
-ALPHA = .01 # Learning Rate
+ALPHA = 0.01  # Learning Rate
 REWARD_CORRECT = 1
 REWARD_FAILURE = -1
 
@@ -24,7 +24,7 @@ Q(s, a) = Q(s, a) + alpha(reward - Q(s, a))
 """
 
 
-class Environment():
+class Environment:
     def __init__(self):
         self.state = 0
 
@@ -32,9 +32,9 @@ class Environment():
         """
         Get the State
         """
-        self.state = np.random.randint(0,2)
+        self.state = np.random.randint(0, 2)
         return self.state
-    
+
     def perform_action(self, action):
         """
         Perform the Action and return a reward
@@ -45,31 +45,32 @@ class Environment():
             return REWARD_FAILURE
 
 
-class Player():
+class Player:
     def __init__(self):
         self.q_table = np.zeros((2, 2))
 
     def make_random_action(self):
-        return  np.random.randint(0,2)
+        return np.random.randint(0, 2)
 
     def make_action(self, state):
         """
         Use the Q Table to make the best prediction
         """
         return np.argmax(self.q_table[state])
-    
+
     def q_update(self, state, action, reward):
         """
         Q update
         """
         og = self.q_table[state][action]
-        self.q_table[state][action] = og + (ALPHA*(reward - og))
+        self.q_table[state][action] = og + (ALPHA * (reward - og))
 
 
 class Training:
     """
     Class to handle the training of our unit
     """
+
     def __init__(self):
         self.player = Player()
         self.env = Environment()
@@ -77,7 +78,7 @@ class Training:
 
         self.num_models = 5
         self.num_steps = 20
-    
+
     def train(self):
         """
         Train a model
@@ -97,7 +98,7 @@ if __name__ == "__main__":
     for i in range(5):
         train = Training()
         train.train()
-        
+
         plt.plot(train.rewards)
 
     plt.grid()

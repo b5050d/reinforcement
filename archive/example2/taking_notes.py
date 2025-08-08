@@ -7,7 +7,7 @@ import numpy as np
 
 
 class Board:
-    def __init__(self, size = 10):
+    def __init__(self, size=10):
         self.size = size
         self.reset()
 
@@ -18,12 +18,12 @@ class Board:
             self.pos = np.random.randint(0, self.size, size=2)
 
         return self.__get_state()
-    
+
     def __get_state(self):
         vec = self.goal - self.pos
         norm = np.linalg.norm(vec)
         return vec / norm if norm > 0 else np.zeros(2)
-    
+
     def step(self, action):
         move = {
             0: np.array([-1, 0]),
@@ -32,30 +32,21 @@ class Board:
             3: np.array([0, 1]),
         }[action]
 
-        self.pos = np.clip(
-            self.pos + move,
-            0,
-            self.size-1
-        )
+        self.pos = np.clip(self.pos + move, 0, self.size - 1)
         done = np.array_equal(self.pos, self.goal)
         reward = 1.0 if done else -0.01
         return self.__get_state(), reward, done
-    
+
 
 class DQN(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = nn.Sequential(
-            nn.Linear(2, 64),
-            nn.ReLU(),
-            nn.Linear(64, 64),
-            nn.ReLU(),
-            nn.Linear(64, 4)
+            nn.Linear(2, 64), nn.ReLU(), nn.Linear(64, 64), nn.ReLU(), nn.Linear(64, 4)
         )
 
     def forward(self, x):
         return self.model(x)
-    
 
 
 # Alright lets do thr training loop now
@@ -97,9 +88,9 @@ for ep in range(episodes):
                 #     print(action)
                 #     counter=0
                 # counter+=1
-        
+
         next_state, reward, done = game_board.step(action)
-        
+
         replay_buffer.append((state, action, reward, next_state, done))
 
         state = next_state
@@ -121,8 +112,8 @@ for ep in range(episodes):
 
             with torch.no_grad():
                 max_q_s2 = nnet(s2).max(1)[0]
-                target = r + gamma * max_q_s2 * (1-d)
-            
+                target = r + gamma * max_q_s2 * (1 - d)
+
             loss = loss_fn(q_val, target)
             optimizer.zero_grad()
             loss.backward()

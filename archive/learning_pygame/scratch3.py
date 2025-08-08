@@ -7,7 +7,6 @@ print(np.round(a))
 # print(a)
 
 
-
 # print(np.round(a))
 # a = np.round(a)
 # print(np.array_equal(a, [2, 5]))

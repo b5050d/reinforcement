@@ -1,17 +1,27 @@
-from flask import render_template, request, flash, session, redirect, url_for, send_file, jsonify
+from flask import (
+    render_template,
+    request,
+    redirect,
+    url_for,
+    jsonify,
+)
 import os
 import sys
-import io
-import base64
+from threading import Thread
+import json
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
-from database_ops import *
+from reinforcement_app.management.database_ops import (
+    get_all_experiments,
+    query_training_loops_by_experiment,
+    query_evaluation_loops_by_experiment,
+    add_experiment,
+    get_replay_path,
+)
 from config import DATABASE_PATH, REPLAY_PATH, MODEL_PATH
-from medium.model_training import training_loop
-from medium.environment import Environment
-from threading import Thread
-import time
+from reinforcement_app.rl.model_training import training_loop
+from reinforcement_app.simulation.environment import Environment
+
 
 def set_up_routes(app):
     """
@@ -35,7 +45,6 @@ def set_up_routes(app):
             experiments_table.append(new_row)
         print(experiments_table)
         return render_template("home.html", experiments_table=experiments_table)
-
 
     @app.route("/experiment/<experiment_id>")
     def experiment(experiment_id):
@@ -65,17 +74,18 @@ def set_up_routes(app):
         # TODO - Add in a view of the Evaluation Rewards
         # TODO - Add in a view of the Evaluation Run Times
 
-        evaluation_runs = query_evaluation_loops_by_experiment(DATABASE_PATH, experiment_id)
+        evaluation_runs = query_evaluation_loops_by_experiment(
+            DATABASE_PATH, experiment_id
+        )
 
         return render_template(
             "experiment.html",
             experiment_id=experiment_id,
             training_runs=training_runs,
             evaluation_runs=evaluation_runs,
-            )
+        )
 
-
-    @app.route("/run_training_loop", methods = ["POST"])
+    @app.route("/run_training_loop", methods=["POST"])
     def run_training_loop():
         """
         Run the training loop
@@ -98,14 +108,20 @@ def set_up_routes(app):
         print(type(config))
 
         # This should be started in a new thread or something
-        new_thread = Thread(target=training_loop, args=(config, experiment_id,))
+        new_thread = Thread(
+            target=training_loop,
+            args=(
+                config,
+                experiment_id,
+            ),
+        )
         new_thread.start()
 
         # time.sleep(1)
 
         # return jsonify({"status": "ok"})
         return redirect(url_for("home"))
-    
+
     @app.route("/play_game", methods=["POST"])
     def play_game():
         """
@@ -121,7 +137,6 @@ def set_up_routes(app):
 
         return jsonify({"status": "ok"})
 
-
     @app.route("/replay_<replay_id>", methods=["POST"])
     def replay(replay_id):
         # TODO - Should add the food locations to the config
@@ -131,7 +146,6 @@ def set_up_routes(app):
 
         replay_file_path = get_replay_path(REPLAY_PATH, replay_id)
         if os.path.exists(replay_file_path):
-
             # Load the replay into a dict
             with open(replay_file_path, "r") as f:
                 replay_dict = json.load(f)
@@ -145,6 +159,7 @@ def set_up_routes(app):
             # TODO - Flash that the replay was not found
             pass
         return jsonify({"status": "ok"})
+
 
 # Kind of need some way to do the config
 # Kind of need some way to start the training threads in the background and

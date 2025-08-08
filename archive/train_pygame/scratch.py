@@ -16,11 +16,12 @@ import os
 
 # Set up the Resources needed
 currdir = os.path.dirname(__file__)
-sprite_path = os.path.join(currdir,"sprite.png")
+sprite_path = os.path.join(currdir, "sprite.png")
 
 
 def find_euclidean_distance(point_a, point_b):
     return np.linalg.norm(point_a - point_b)
+
 
 # Constants
 
@@ -41,11 +42,11 @@ foods = []
 for i in range(10):
     stop_condition = False
     while not stop_condition:
-        rand_pos_height = np.random.randint(20, HEIGHT- 20)
+        rand_pos_height = np.random.randint(20, HEIGHT - 20)
         rand_pos_width = np.random.randint(20, WIDTH - 20)
         rand_pos = np.array([rand_pos_width, rand_pos_height])
         if not any(np.array_equal(rand_pos, existing) for existing in foods):
-            stop_condition=True
+            stop_condition = True
             foods.append(rand_pos)
 
 # Initialize Pygame
@@ -71,7 +72,7 @@ while True:
     # Handle keypresses
     keys = pygame.key.get_pressed()
 
-    key_flags = [keys[pygame.K_w], keys[pygame.K_a], keys[pygame.K_s],  keys[pygame.K_d]]
+    key_flags = [keys[pygame.K_w], keys[pygame.K_a], keys[pygame.K_s], keys[pygame.K_d]]
     value = 0
     for i, bit in enumerate(reversed(key_flags)):
         value |= bit << i
@@ -89,7 +90,7 @@ while True:
     if keys[pygame.K_x]:
         if cooldown == 0:
             print(PLAYER_POS)
-            cooldown+=600
+            cooldown += 600
 
     # Fill background
     screen.fill(GREEN)
@@ -105,7 +106,7 @@ while True:
         if find_euclidean_distance(f, np.array(PLAYER_POS)) < 5:
             print("Found the food")
             to_del.append(i)
-    
+
     for i in to_del:
         foods.pop(i)
 
@@ -119,13 +120,13 @@ while True:
     # Update display
     pygame.display.flip()
 
-    if cooldown>0:
-        cooldown=cooldown-1
+    if cooldown > 0:
+        cooldown = cooldown - 1
 
     clock.tick(FPS)
 
 end_time = time.time()
-elapsed = round(end_time - start_time,3)
+elapsed = round(end_time - start_time, 3)
 
 print(f"The time taken for you was: {elapsed}")
 print("Game Over!")

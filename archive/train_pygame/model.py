@@ -18,7 +18,7 @@ import pickle
 
 # Set up the Resources needed
 currdir = os.path.dirname(__file__)
-sprite_path = os.path.join(currdir,"sprite.png")
+sprite_path = os.path.join(currdir, "sprite.png")
 
 ARENA_SIZE = 300
 WIDTH, HEIGHT = ARENA_SIZE, ARENA_SIZE
@@ -33,7 +33,7 @@ clock = pygame.time.Clock()
 
 
 def normalize_delta(span, delta):
-    ans = (delta / (2*span)) + (.5)
+    ans = (delta / (2 * span)) + (0.5)
     if ans < 0:
         return 0
     elif ans > 1:
@@ -73,18 +73,24 @@ def save_ai_run(foods, actions, run_iter, run_tag):
 
     run_iter = f"{run_iter:04d}"
 
-    filepath = os.path.join(os.path.dirname(__file__), "stored", f"{run_tag}_{run_iter}.pkl")
+    filepath = os.path.join(
+        os.path.dirname(__file__), "stored", f"{run_tag}_{run_iter}.pkl"
+    )
 
     with open(filepath, "wb") as f:
         pickle.dump(run, f)
     assert os.path.exists(filepath)
 
+
 def save_ai_model(model, model_tag, model_num):
     """
     Save the AI model for future re-use
     """
-    filepath = os.path.join(os.path.dirname(__file__), "stored", f"{model_tag}_{model_num:04d}.pth")
+    filepath = os.path.join(
+        os.path.dirname(__file__), "stored", f"{model_tag}_{model_num:04d}.pth"
+    )
     torch.save(model.state_dict(), filepath)
+
 
 def load_ai_model(model_class, filepath):
     """
@@ -95,17 +101,21 @@ def load_ai_model(model_class, filepath):
     model.load_state_dict(torch.load(filepath))
     model.eval
 
+
 def load_ai_run(run_iter, run_tag):
     """
     Load an AI run to see how it has done
     """
     run_iter = f"{run_iter:04d}"
-    filepath = os.path.join(os.path.dirname(__file__), "stored", f"{run_tag}_{run_iter}.pkl")
+    filepath = os.path.join(
+        os.path.dirname(__file__), "stored", f"{run_tag}_{run_iter}.pkl"
+    )
     with open(filepath, "rb") as f:
         ans = pickle.load(f)
     return ans
 
-def get_random_foods(width, height, num = 10):
+
+def get_random_foods(width, height, num=10):
     """
     Get a random arrangement of foods about the arena
     """
@@ -113,13 +123,14 @@ def get_random_foods(width, height, num = 10):
     for i in range(num):
         stop_condition = False
         while not stop_condition:
-            x = np.random.randint(20, width- 20)
+            x = np.random.randint(20, width - 20)
             y = np.random.randint(20, height - 20)
             rand_pos = (x, y)
             if rand_pos not in foods:
                 stop_condition = True
                 foods[rand_pos] = 1
     return foods
+
 
 def encode_foods(player_x, player_y, foods):
     """
@@ -133,21 +144,21 @@ def encode_foods(player_x, player_y, foods):
     diffs_inactive = []
     keys_inactive = []
     for fpos in foods.keys():
-        if foods[fpos] ==  1:
+        if foods[fpos] == 1:
             diffs_active.append(find_euclidean_distance([player_x, player_y], fpos))
             keys_active.append(fpos)
         else:
             diffs_inactive.append(find_euclidean_distance([player_x, player_y], fpos))
             keys_inactive.append(fpos)
-    
+
     sorted_pairs_active = sorted(zip(diffs_active, keys_active))
     sorted_pairs_inactive = sorted(zip(diffs_inactive, keys_inactive))
 
     foods_array = []
 
     # Add the players position here
-    foods_array.append(player_x/WIDTH)
-    foods_array.append(player_y/HEIGHT)
+    foods_array.append(player_x / WIDTH)
+    foods_array.append(player_y / HEIGHT)
 
     for euc, fpos in sorted_pairs_active:
         dx, dy = find_x_y_delta([player_x, player_y], fpos)
@@ -160,7 +171,7 @@ def encode_foods(player_x, player_y, foods):
         foods_array.append(normalize_delta(WIDTH, dx))
         foods_array.append(normalize_delta(HEIGHT, dy))
         foods_array.append(foods[fpos])
-    
+
     # print(foods_array)
     assert max(foods_array) <= 1
     assert min(foods_array) >= 0
@@ -168,10 +179,11 @@ def encode_foods(player_x, player_y, foods):
     return np.array(foods_array, dtype=np.float32)
 
 
-class Environment():
+class Environment:
     """
     The Environment that runs the game
     """
+
     def __init__(self):
         self.reset()
 
@@ -181,7 +193,7 @@ class Environment():
         """
         # Get new foods
         self.foods = get_random_foods(WIDTH, HEIGHT, 10)
-        self.player_pos = [int(WIDTH/2), int(HEIGHT/2)]
+        self.player_pos = [int(WIDTH / 2), int(HEIGHT / 2)]
 
         self.last_min_euclid = 999999
 
@@ -203,10 +215,10 @@ class Environment():
             (50, 258): 1,
             (247, 144): 1,
             (90, 157): 1,
-            (211, 270): 1
+            (211, 270): 1,
         }
 
-        self.player_pos = [int(WIDTH/2), int(HEIGHT/2)]
+        self.player_pos = [int(WIDTH / 2), int(HEIGHT / 2)]
         self.visited_tiles = {}
 
         self.last_min_euclid = 999999
@@ -218,61 +230,63 @@ class Environment():
         check if the player has reached a food,
         check if the player is done, return next state
         """
-        if action == 0:  #up
-            self.player_pos[1]-=PLAYER_SPEED
-        elif action == 1: # Upper Left
-            self.player_pos[0]-=PLAYER_SPEED
-            self.player_pos[1]-=PLAYER_SPEED
-        elif action == 2: # Left
-            self.player_pos[0]-=PLAYER_SPEED
-        elif action == 3: # Down Left
-            self.player_pos[0]-=PLAYER_SPEED
-            self.player_pos[1]+=PLAYER_SPEED
-        elif action == 4: # Down
-            self.player_pos[1]+=PLAYER_SPEED
-        elif action == 5: # Down Right
-            self.player_pos[0]+=PLAYER_SPEED
-            self.player_pos[1]+=PLAYER_SPEED
-        elif action == 6: # Right
-            self.player_pos[0]+=PLAYER_SPEED
-        elif action == 7: # Up Right
-            self.player_pos[0]+=PLAYER_SPEED
-            self.player_pos[1]-=PLAYER_SPEED
+        if action == 0:  # up
+            self.player_pos[1] -= PLAYER_SPEED
+        elif action == 1:  # Upper Left
+            self.player_pos[0] -= PLAYER_SPEED
+            self.player_pos[1] -= PLAYER_SPEED
+        elif action == 2:  # Left
+            self.player_pos[0] -= PLAYER_SPEED
+        elif action == 3:  # Down Left
+            self.player_pos[0] -= PLAYER_SPEED
+            self.player_pos[1] += PLAYER_SPEED
+        elif action == 4:  # Down
+            self.player_pos[1] += PLAYER_SPEED
+        elif action == 5:  # Down Right
+            self.player_pos[0] += PLAYER_SPEED
+            self.player_pos[1] += PLAYER_SPEED
+        elif action == 6:  # Right
+            self.player_pos[0] += PLAYER_SPEED
+        elif action == 7:  # Up Right
+            self.player_pos[0] += PLAYER_SPEED
+            self.player_pos[1] -= PLAYER_SPEED
         else:
             pass
 
         if self.player_pos[0] >= WIDTH:
-            self.player_pos[0] = WIDTH-1
+            self.player_pos[0] = WIDTH - 1
         elif self.player_pos[0] <= 0:
-            self.player_pos[0]=0
+            self.player_pos[0] = 0
 
         if self.player_pos[1] >= HEIGHT:
-            self.player_pos[1] = HEIGHT-1
+            self.player_pos[1] = HEIGHT - 1
         elif self.player_pos[1] <= 0:
-            self.player_pos[1]=0
+            self.player_pos[1] = 0
 
         reward = 0
         # Check if we are in proximity of the food
         euclids = []
         for f in self.foods:
-            if self.foods[f] == 1: # active
+            if self.foods[f] == 1:  # active
                 ans = find_euclidean_distance(self.player_pos, f)
                 euclids.append(ans)
                 if ans <= 5:
                     self.foods[f] = 0
-                    reward+=1
+                    reward += 1
 
         # Check if we are closer or further than last time:
         # Get the min distance
         min_euclid = min(euclids)
         difference = min_euclid - self.last_min_euclid
         if abs(difference) > 5:
-            reward += 0 
+            reward += 0
         elif difference < 0:
             # reward += -.1 * difference
-            reward = .3*(-1 * difference * (((-.1/ARENA_SIZE) * min_euclid) + .1))
+            reward = 0.3 * (
+                -1 * difference * (((-0.1 / ARENA_SIZE) * min_euclid) + 0.1)
+            )
         if reward == 0:
-            reward = -.1
+            reward = -0.1
         self.last_min_euclid = min_euclid
 
         tup = (self.player_pos[0], self.player_pos[1])
@@ -280,13 +294,13 @@ class Environment():
             self.visited_tiles[tup] = 1
         else:
             self.visited_tiles[tup] += 1
-            
+
         if self.visited_tiles[tup] > 10:
-            reward = -1*self.visited_tiles[tup]
+            reward = -1 * self.visited_tiles[tup]
 
         # # Encode the Foods
         obs = encode_foods(self.player_pos[0], self.player_pos[1], self.foods)
-        
+
         # Check how many foods remain
         done = True
         for f in self.foods:
@@ -294,7 +308,7 @@ class Environment():
                 done = False
                 break
         if done == True:
-            reward = 10 # won the game! give a big reward
+            reward = 10  # won the game! give a big reward
         # print(f"Reward: {reward}")
         # time.sleep(.1)
         return obs, reward, done
@@ -304,7 +318,12 @@ class Environment():
         Handle the Keypresses
         """
         keys = pygame.key.get_pressed()
-        key_flags = [keys[pygame.K_w], keys[pygame.K_a], keys[pygame.K_s],  keys[pygame.K_d]]
+        key_flags = [
+            keys[pygame.K_w],
+            keys[pygame.K_a],
+            keys[pygame.K_s],
+            keys[pygame.K_d],
+        ]
         value = 0
         for i, bit in enumerate(reversed(key_flags)):
             value |= bit << i
@@ -330,10 +349,10 @@ class Environment():
 
         return action
 
-    def play(self, ai = False, ai_history = [], ai_foods = {}):
+    def play(self, ai=False, ai_history=[], ai_foods={}):
         if ai:
             # Get the player back to the starting point
-            self.player_pos = [int(WIDTH/2), int(HEIGHT/2)]
+            self.player_pos = [int(WIDTH / 2), int(HEIGHT / 2)]
 
             # Make all the foods active again
             self.foods = ai_foods
@@ -359,7 +378,7 @@ class Environment():
         first_move = True
         game_timer = 0
         step_counter = 0
-        
+
         stop_condition = False
         total_reward = 0
         while not stop_condition:
@@ -380,7 +399,7 @@ class Environment():
                 total_reward = 0
 
             next_state, reward, done = self.step(action)
-            total_reward+=reward
+            total_reward += reward
             # input("pause")
 
             # Rendering Steps
@@ -396,12 +415,12 @@ class Environment():
 
             clock.tick(FPS)
 
-            step_counter+=1
+            step_counter += 1
             if not first_move:
-                game_timer+=1/FPS
+                game_timer += 1 / FPS
 
             text_clock = font.render(f"{game_timer:.2f}", True, (255, 255, 255))
-            text_rect = text_clock.get_rect(topright=(WIDTH-10, 10))
+            text_rect = text_clock.get_rect(topright=(WIDTH - 10, 10))
 
             screen.blit(text_clock, text_rect)
 
@@ -425,16 +444,12 @@ class DQN(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = nn.Sequential(
-            nn.Linear(32, 64),
-            nn.ReLU(),
-            nn.Linear(64, 64),
-            nn.ReLU(),
-            nn.Linear(64, 8)
+            nn.Linear(32, 64), nn.ReLU(), nn.Linear(64, 64), nn.ReLU(), nn.Linear(64, 8)
         )
 
     def forward(self, x):
         return self.model(x)
-    
+
 
 def training_loop():
     env = Environment()
@@ -446,7 +461,7 @@ def training_loop():
     nnet = DQN()
     nnet.to(device)
     LEARNING_RATE = 1e-3
-    optimizer = optim.Adam(nnet.parameters(), lr = LEARNING_RATE)
+    optimizer = optim.Adam(nnet.parameters(), lr=LEARNING_RATE)
     loss_fn = nn.MSELoss()
 
     # Set up the Target Network
@@ -456,16 +471,16 @@ def training_loop():
 
     replay_buffer = deque(maxlen=10000)
     batch_size = 64
-    gamma = .99
+    gamma = 0.99
     epsilon = 1.0
-    epsilon_decay = .995
-    epsilon_min = .1
+    epsilon_decay = 0.995
+    epsilon_min = 0.1
     episodes = 1000
 
     total_steps = 0
 
     EVALUATION_INTERVAL = 10
-    TARGET_UPDATE_N = 5 # Update the target network every N episodes
+    TARGET_UPDATE_N = 5  # Update the target network every N episodes
 
     run_tag = "20250712fifth"
     # The second had a stronger reward
@@ -491,15 +506,17 @@ def training_loop():
                 action = random.randint(0, 7)
             else:
                 with torch.no_grad():
-                    q_vals = nnet(torch.tensor(np.array(state), dtype=torch.float32).unsqueeze(0).to(device))
+                    q_vals = nnet(
+                        torch.tensor(np.array(state), dtype=torch.float32)
+                        .unsqueeze(0)
+                        .to(device)
+                    )
                     action = torch.argmax(q_vals).item()
 
             action_history.append(action)
 
             next_state, reward, done = env.step(action)
-            replay_buffer.append(
-                (state, action, reward, next_state, done)
-            )
+            replay_buffer.append((state, action, reward, next_state, done))
             state = next_state
             total_reward += reward
 
@@ -531,13 +548,12 @@ def training_loop():
                 loss.backward()
                 optimizer.step()
 
-            total_steps+=1
+            total_steps += 1
 
             if done:
                 break
-                
 
-        if ep%TARGET_UPDATE_N == 0:  # or every N episodes or steps
+        if ep % TARGET_UPDATE_N == 0:  # or every N episodes or steps
             nnet_target.load_state_dict(nnet.state_dict())
 
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
@@ -545,7 +561,7 @@ def training_loop():
         print(f"Episode Run time = {round(time.time() - start_time, 3)}")
 
         # Save the run every 10
-        if ep%EVALUATION_INTERVAL == 0:
+        if ep % EVALUATION_INTERVAL == 0:
             # tag = "closer_bigbig_reward"
             # save_ai_run(env.foods, action_history, ep, tag)
             # save_ai_model(nnet, tag, ep)
@@ -591,7 +607,7 @@ def evaluation_loop(run_tag, env, ep, nnet):
     save_ai_run(env.foods, action_history, ep, run_tag)
     save_ai_model(nnet, run_tag, ep)
 
-    nnet.train() # Set it back in training mode
+    nnet.train()  # Set it back in training mode
 
 
 def play_loop():
