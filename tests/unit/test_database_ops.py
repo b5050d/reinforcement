@@ -20,6 +20,9 @@ from reinforcement_app.management.database_ops import (
     delete_experiment,
     get_model_path,
     get_replay_path,
+    add_config,
+    get_config_path,
+    load_config,
 )
 
 
@@ -56,7 +59,7 @@ def test_add_experiment(tmp_path):
     db_path = os.path.join(tmp_path, "test1.db")
 
     assert not os.path.exists(db_path)
-    ans = add_experiment(db_path, "Testing")
+    ans = add_experiment(db_path, "Testing", 1)
     assert ans == 1
     assert os.path.exists(db_path)
 
@@ -66,7 +69,7 @@ def test_add_experiment(tmp_path):
     assert "Testing" == ans[0][1]
 
     # Add an experiment to an existing table
-    ans = add_experiment(db_path, "Checking")
+    ans = add_experiment(db_path, "Checking", 2)
     assert ans == 2
 
     # Check that both experiments are now present
@@ -87,7 +90,7 @@ def test_add_model(tmp_path):
         add_model(db_path, 1, sample_model, model_folder)
 
     # Create the database so it exists
-    add_experiment(db_path, "Testing")
+    add_experiment(db_path, "Testing", 1)
 
     # Add a model when the experiment does not exist
     with pytest.raises(Exception):
@@ -259,6 +262,24 @@ def test_add_evaluation_run(tmp_path):
     assert len(ans) == 4
 
 
+def test_add_config(tmp_path):
+    """
+    Should be able to be added before an experiment
+    """
+    fake1 = {"hello": "hi"}
+
+    id = add_config(tmp_path, fake1)
+    assert id == 1
+    cfg_path = get_config_path(tmp_path, id)
+    assert os.path.exists(cfg_path)
+
+    fake2 = {"hello": "bye"}
+    id = add_config(tmp_path, fake2)
+    assert id == 2
+    cfg_path = get_config_path(tmp_path, id)
+    assert os.path.exists(cfg_path)
+
+
 def test_get_all_experiments(tmp_path):
     """ """
     db_path = os.path.join(tmp_path, "test1.db")
@@ -415,6 +436,18 @@ def test_delete_experiment(tmp_path):
 
     ans = get_all_evaluation_runs(db_path)
     assert len(ans) == 0
+
+
+def test_load_config(tmp_path):
+    ans = load_config(tmp_path, 1)
+    assert ans is None
+
+    fake1 = {"hello": "hi"}
+
+    id = add_config(tmp_path, fake1)
+
+    ans = load_config(tmp_path, id)
+    assert ans == fake1
 
 
 # # def test_quer

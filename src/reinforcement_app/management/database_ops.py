@@ -6,6 +6,7 @@ import sqlite3
 import os
 import torch
 import json
+import glob
 
 
 def table_exists(db_path: str, table_name: str) -> bool:
@@ -31,7 +32,8 @@ def table_exists(db_path: str, table_name: str) -> bool:
 create_experiment_table_cmd = """
 CREATE TABLE IF NOT EXISTS Experiment (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    description TEXT NOT NULL
+    description TEXT NOT NULL,
+    config_id INTEGER
 )
 """
 
@@ -68,6 +70,7 @@ CREATE TABLE IF NOT EXISTS Training (
 )
 """
 
+
 create_evaluation_table_cmd = """
 CREATE TABLE IF NOT EXISTS Evaluation (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,8 +84,9 @@ CREATE TABLE IF NOT EXISTS Evaluation (
 )
 """
 
+
 insert_experiment_cmd = """
-INSERT INTO Experiment (description) VALUES (?)
+INSERT INTO Experiment (description, config_id) VALUES (?,?)
 """
 
 
@@ -166,12 +170,14 @@ def create_evaluation_table(database_path):
         connection.commit()
 
 
-def add_experiment(database_path, description):
+def add_experiment(database_path, description, config_id=-1):
     """
     Add an experiment to the Experiement table in the database
 
     returns the experiment ID
     """
+    assert type(config_id) is int
+
     create_experiment_table(database_path)
 
     # Add the experiment to the experiement table
@@ -179,7 +185,7 @@ def add_experiment(database_path, description):
         cursor = connection.cursor()
 
         # Create the Users table if it doesn't exist yet
-        cursor.execute(insert_experiment_cmd, (description,))
+        cursor.execute(insert_experiment_cmd, (description, config_id))
         experiment_id = cursor.lastrowid
         connection.commit()
 
@@ -389,6 +395,30 @@ def add_evaluation_run(
             (experiment, episode, reward, runtime, replay_id, model_id),
         )
         connection.commit()
+
+
+def get_config_path(config_path, config_id):
+    return os.path.join(config_path, f"{config_id}.json")
+
+
+def add_config(config_path, config_contents):
+    # Find the newest integer to use
+    # Find all existing configs
+    searchpath = os.path.join(config_path, "*.json")
+    found_configs = glob.glob(searchpath)
+
+    if len(found_configs) == 0:
+        number = 1
+    else:
+        number = int(os.path.basename(found_configs[-1]).removesuffix(".json")) + 1
+
+    path = get_config_path(config_path, number)
+
+    with open(path, "w") as f:
+        json.dump(config_contents, f)
+    assert os.path.exists(path)
+
+    return number
 
 
 def get_all_experiments(database_path):
@@ -624,6 +654,17 @@ def delete_experiment(
     with get_connection(database_path) as connection:
         cursor = connection.cursor()
         cursor.execute("DELETE FROM Experiment WHERE id = ?", (experiment_id,))
+
+
+def load_config(config_path, config_id):
+    expected_path = get_config_path(config_path, config_id)
+
+    if not os.path.exists(expected_path):
+        return None
+    else:
+        with open(expected_path, "rb") as f:
+            contents = json.load(f)
+        return contents
 
 
 if __name__ == "__main__":

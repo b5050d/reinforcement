@@ -17,8 +17,10 @@ from reinforcement_app.management.database_ops import (
     query_evaluation_loops_by_experiment,
     add_experiment,
     get_replay_path,
+    add_config,
+    load_config,
 )
-from config import DATABASE_PATH, REPLAY_PATH, MODEL_PATH
+from config import DATABASE_PATH, REPLAY_PATH, MODEL_PATH, CONFIG_PATH
 from reinforcement_app.rl.model_training import training_loop
 from reinforcement_app.simulation.environment import Environment
 
@@ -44,6 +46,7 @@ def set_up_routes(app):
             new_row.append(f"/experiment/{exp[0]}")
             experiments_table.append(new_row)
         print(experiments_table)
+
         return render_template("home.html", experiments_table=experiments_table)
 
     @app.route("/experiment/<experiment_id>")
@@ -94,18 +97,19 @@ def set_up_routes(app):
         # print("Request content type:", request.content_type)
         config = request.get_json(force=True)
 
+        config_id = add_config(CONFIG_PATH, config)
+
         # Create a new experiment
-        experiment_id = add_experiment(DATABASE_PATH, config["EXPERIMENT_DESCRIPTION"])
+        experiment_id = add_experiment(
+            DATABASE_PATH, config["EXPERIMENT_DESCRIPTION"], config_id
+        )
 
         # Add the experiment ID to the config
         config["EXPERIMENT_ID"] = experiment_id
         config["DATABASE_PATH"] = DATABASE_PATH
         config["MODEL_PATH"] = MODEL_PATH
         config["REPLAY_PATH"] = REPLAY_PATH
-
-        print("Got the config")
-        print(config)
-        print(type(config))
+        config["CONFIG_PATH"] = CONFIG_PATH
 
         # This should be started in a new thread or something
         new_thread = Thread(
@@ -159,6 +163,10 @@ def set_up_routes(app):
             # TODO - Flash that the replay was not found
             pass
         return jsonify({"status": "ok"})
+
+    @app.route("/replay_<replay_id>", methods=["POST"])
+    def config(config_id):
+        load_config()
 
 
 # Kind of need some way to do the config

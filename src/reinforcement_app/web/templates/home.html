@@ -70,6 +70,7 @@
                 <tr>
                     <th>Experiment ID</th>
                     <th>Experiment Description</th>
+                    <th>Config ID</th>
                     <th>Experiment Link</th>
                 </tr>
             </thead>
@@ -78,7 +79,8 @@
                 <tr>
                     <td>{{ exp[0] }}</td>
                     <td>{{ exp[1] }}</td>
-                    <td><a href = "{{ exp[2] }}">Open Experiment</a></td>
+                    <td>{{ exp[2] }}</td>
+                    <td><a href = "{{ exp[3] }}">Open Experiment</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
