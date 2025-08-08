@@ -44,7 +44,13 @@
         method: "POST",
         body: raw,
         headers: { "Content-Type": "application/json" }
-    });
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Request failed");
+        // Refresh after request completes
+        location.reload();
+    })
+    .catch(err => console.error(err));
     }
     function playGame() {
     const raw = document.getElementById('configInput').value;
