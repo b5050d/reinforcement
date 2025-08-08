@@ -33,6 +33,7 @@ class Environment():
         """
         Define needed variables for the simulation
         """
+        self.last_state = None
 
         self.N_FOODS = self.config['N_FOODS']
         self.RANDOM_TYPE = self.config['RANDOM_TYPE']
@@ -186,7 +187,10 @@ class Environment():
         """
         Perform an Action and Progress the game
         """
-        reward = -.01
+        if self.last_state is None:
+            self.last_state = compute_directional_signals(self.player_position, self.foods)
+
+        reward = -.01  # Should be punished somewhat for taking step
 
         # Perform action
         self.perform_action(action)
@@ -198,7 +202,7 @@ class Environment():
 
             if dist <= self.PLAYER_RADIUS:
                 pass
-                reward += 1
+                reward += 50
             else:
                 foods.append(f)
         self.foods = foods
@@ -211,6 +215,17 @@ class Environment():
         # Update Observation Space
         next_state = compute_directional_signals(self.player_position, self.foods)
 
+        # Check if the player got closer to the closest food or further
+        last_max = max(self.last_state)
+        new_max = max(next_state)
+        if new_max > .9:
+            pass
+        else:
+            reward += (new_max - last_max)
+            if new_max == last_max:
+                reward += -.05 # Penalize sticking right next to the target
+
+        self.last_state = next_state
         return next_state, reward, done
 
     def handle_keypresses(self):
