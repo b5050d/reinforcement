@@ -81,6 +81,13 @@
     </table>
 </div>
 
+<div>
+    <h3>Config</h3>
+    <pre id="json-display">{{ config_data | safe }}</pre>
+    <button onclick="navigator.clipboard.writeText(document.getElementById('json-display').innerText)">Copy</button>
+</div>
+
+
 <script>
 function sendReplay(id) {
     fetch(`/replay_${id}`, {

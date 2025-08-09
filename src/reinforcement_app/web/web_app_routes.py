@@ -60,6 +60,7 @@ def set_up_routes(app):
         for item in ans:
             if item[0] == experiment_id:
                 success = True
+                config_id = item[2]
         if not success:
             return "No Experiment Found"
 
@@ -70,9 +71,6 @@ def set_up_routes(app):
 
         training_runs = query_training_loops_by_experiment(DATABASE_PATH, experiment_id)
 
-        print("Training Runs")
-        print(training_runs)
-
         # TODO - Add in a view of the Evaluation Loops
         # TODO - Add in a view of the Evaluation Rewards
         # TODO - Add in a view of the Evaluation Run Times
@@ -81,11 +79,17 @@ def set_up_routes(app):
             DATABASE_PATH, experiment_id
         )
 
+        # Load the json as a dict
+        config = load_config(CONFIG_PATH, config_id)
+        # Dump the json to a string which looks nice
+        config_data = json.dumps(config, indent=2)
+
         return render_template(
             "experiment.html",
             experiment_id=experiment_id,
             training_runs=training_runs,
             evaluation_runs=evaluation_runs,
+            config_data=config_data
         )
 
     @app.route("/run_training_loop", methods=["POST"])

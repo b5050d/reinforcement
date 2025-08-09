@@ -104,6 +104,7 @@ insert_training_cmd = """
 INSERT INTO Training (experiment_id, episode, epsilon, reward, runtime, replay_id, model_id) VALUES (?,?,?,?,?,?,?)
 """
 
+
 insert_evaluation_cmd = """
 INSERT INTO Evaluation (experiment_id, episode, reward, runtime, replay_id, model_id) VALUES (?,?,?,?,?,?)
 """
