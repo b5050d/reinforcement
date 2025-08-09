@@ -9,6 +9,8 @@ import os
 import sys
 from threading import Thread
 import json
+import io
+import base64
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from reinforcement_app.management.database_ops import (
@@ -23,6 +25,9 @@ from reinforcement_app.management.database_ops import (
 from config import DATABASE_PATH, REPLAY_PATH, MODEL_PATH, CONFIG_PATH
 from reinforcement_app.rl.model_training import training_loop
 from reinforcement_app.simulation.environment import Environment
+
+os.environ["MPLBACKEND"] = "Agg"
+from matplotlib import pyplot as plt
 
 
 def set_up_routes(app):
@@ -64,20 +69,88 @@ def set_up_routes(app):
         if not success:
             return "No Experiment Found"
 
-        # TODO - Add in a view of the Training Loops table
-        # TODO - Add in a plot of the Training Rewards
-        # TODO - Add in a plot of the Training Epsilons
-        # TODO - Add in a plot of the Training Runtimes
-
         training_runs = query_training_loops_by_experiment(DATABASE_PATH, experiment_id)
 
-        # TODO - Add in a view of the Evaluation Loops
-        # TODO - Add in a view of the Evaluation Rewards
-        # TODO - Add in a view of the Evaluation Run Times
+        # TODO - Add in a plot of the Training Rewards
+        training_rewards = []
+        training_runtimes = []
+        training_epsilons = []
+        x_axis = []
+        for iter, tr in enumerate(training_runs):
+            x_axis.append(iter)
+            training_epsilons.append(float(tr[3]))
+            training_rewards.append(float(tr[4]))
+            training_runtimes.append(float(tr[5]))
+
+        def generate_plot(title, x_data, y_data, x_axis, y_axis):
+            """
+            Generate a plot for display in the webpage
+            """
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.plot(x_data, y_data)
+            ax.set_title(title)
+            ax.set_xlabel(x_axis)
+            ax.set_ylabel(y_axis)
+            ax.grid()
+
+            # Save to BytesIO
+            buf = io.BytesIO()
+            plt.savefig(buf, format="png")
+            buf.seek(0)
+            image_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+            plt.close(fig)
+            plt.cla()
+
+            return image_base64
+
+        train_eps_plot = generate_plot(
+            "Training Epsilons",
+            x_axis,
+            training_epsilons,
+            "Episodes",
+            "Epsilon Value [0-1]",
+        )
+        train_rwd_plot = generate_plot(
+            "Training Rewards",
+            x_axis,
+            training_rewards,
+            "Episodes",
+            "Rewards per Episode",
+        )
+        train_tim_plot = generate_plot(
+            "Training Runtimes", x_axis, training_runtimes, "Episodes", "Runtime [s]"
+        )
+
+        train_images = [train_eps_plot, train_rwd_plot, train_tim_plot]
 
         evaluation_runs = query_evaluation_loops_by_experiment(
             DATABASE_PATH, experiment_id
         )
+
+        evaluation_rewards = []
+        evaluation_runtimes = []
+        x_axis = []
+        for iter, tr in enumerate(evaluation_runs):
+            x_axis.append(iter)
+            evaluation_rewards.append(float(tr[3]))
+            evaluation_runtimes.append(float(tr[4]))
+
+        eval_rwd_plot = generate_plot(
+            "Evaluation Rewards",
+            x_axis,
+            evaluation_rewards,
+            "Episodes",
+            "Rewards per Eval Run",
+        )
+        eval_tim_plot = generate_plot(
+            "Evaluation Runtimes",
+            x_axis,
+            evaluation_runtimes,
+            "Episodes",
+            "Runtime [s]",
+        )
+
+        eval_images = [eval_rwd_plot, eval_tim_plot]
 
         # Load the json as a dict
         config = load_config(CONFIG_PATH, config_id)
@@ -89,7 +162,9 @@ def set_up_routes(app):
             experiment_id=experiment_id,
             training_runs=training_runs,
             evaluation_runs=evaluation_runs,
-            config_data=config_data
+            config_data=config_data,
+            train_images=train_images,
+            eval_images=eval_images,
         )
 
     @app.route("/run_training_loop", methods=["POST"])

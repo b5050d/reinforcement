@@ -7,6 +7,7 @@ import os
 import torch
 import json
 import glob
+from reinforcement_app.rl.model import DQN
 
 
 def table_exists(db_path: str, table_name: str) -> bool:
@@ -666,6 +667,23 @@ def load_config(config_path, config_id):
         with open(expected_path, "rb") as f:
             contents = json.load(f)
         return contents
+
+
+def load_model(model_folder, model_id):
+    """
+    Load a model from the saved folder
+    """
+    model_file_path = get_model_path(model_folder, model_id)
+
+    if not os.path.exists(model_file_path):
+        return None
+
+    else:
+        model = DQN()
+        model.load_state_dict(torch.load(model_file_path))
+        model.eval()
+
+        return model
 
 
 if __name__ == "__main__":

@@ -8,6 +8,12 @@
 <h1>Experiment : {{ experiment_id }}</h1>
 
 <h3>Training Table</h3>
+<div class="plot-row">
+    {% for img in train_images %}
+        <img src="data:image/png;base64,{{ img }}">
+    {% endfor %}
+</div>
+<br>
 <div class="scroll-container">
     <table class="clean-table">
         <thead>
@@ -46,6 +52,11 @@
 </div>
 
 <h3>Evaluation Table</h3>
+<div class="plot-row">
+    {% for img in eval_images %}
+        <img src="data:image/png;base64,{{ img }}">
+    {% endfor %}
+</div>
 <div class="scroll-container">
     <table class="clean-table">
         <thead>
