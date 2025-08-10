@@ -16,8 +16,9 @@ from reinforcement_app.management.database_ops import (
     add_replay,
     add_training_run,
     add_evaluation_run,
+    add_model,
 )
-from config import DATABASE_PATH, REPLAY_PATH
+from config import DATABASE_PATH, REPLAY_PATH, MODEL_PATH
 
 
 def training_loop(config, experiment_id):
@@ -146,12 +147,20 @@ def training_loop(config, experiment_id):
                 eval_actions,
                 eval_reward,
                 runtime,
+                nnet,
             ) = evaluation_loop(config, nnet)
             replay_config = config.copy()
             replay_config["ACTIONS"] = eval_actions
 
             replay_id = add_replay(
                 DATABASE_PATH, experiment_id, replay_config, REPLAY_PATH
+            )
+
+            model_id = add_model(
+                DATABASE_PATH,
+                experiment_id,
+                nnet,
+                MODEL_PATH
             )
 
             add_evaluation_run(
@@ -161,7 +170,7 @@ def training_loop(config, experiment_id):
                 round(eval_reward, 3),
                 runtime,
                 replay_id,
-                None,
+                model_id,
             )
 
             pygame.quit()
@@ -201,7 +210,7 @@ def evaluation_loop(config, nnet):
 
     nnet.train()  # Set it back in training mode
 
-    return action_history, total_reward, run_time
+    return action_history, total_reward, run_time, nnet
 
 
 if __name__ == "__main__":
