@@ -34,17 +34,56 @@ def further_randomize_matrix():
 
 
 def get_random_food_positions(size, n_foods, seed):
+    """
+    Build a list of 
+    """
+    assert size > 5
     # Find the food
     np.random.seed(seed)
     food_positions = []
     for i in range(n_foods):
         # Generate a new food position
-        # TODO - make sure the food dont appear on the very edge of the map
-        x = np.random.randint(0, size)
-        y = np.random.randint(0, size)
 
-        food_positions.append((x, y))
+        stop_condition = False
+        while not stop_condition:
+            x = np.random.randint(0, size)
+            y = np.random.randint(0, size)
+            
+            if (x,y) not in food_positions and (x,y) != (int(size/2), int(size/2)):
+                if x > max(1, int(size*.1)):
+                    if x < min(size-1, int(size*.9)):
+                        if y > max(1, int(size*.1)):
+                            if y < min(size-1, int(size*.9)):
+                                food_positions.append((x, y))
+                                stop_condition = True
     return food_positions
+
+
+def get_random_danger_positions(size, n_dangers, foods, seed):
+    """
+    
+    """
+    assert size > 5
+
+    np.random.seed(seed)
+    danger_positions = []
+    for i in range(n_dangers):
+        # Generate a new food position
+
+        stop_condition = False
+        while not stop_condition:
+            x = np.random.randint(0, size)
+            y = np.random.randint(0, size)
+            
+            if (x,y) not in danger_positions and (x,y) != (int(size/2), int(size/2)):
+                if (x,y) not in foods:
+                    if x > max(1, int(size*.1)):
+                        if x < min(size-1, int(size*.9)):
+                            if y > max(1, int(size*.1)):
+                                if y < min(size-1, int(size*.9)):
+                                    danger_positions.append((x, y))
+                                    stop_condition = True
+    return danger_positions
 
 
 def heading_from_dxdy(dx, dy):

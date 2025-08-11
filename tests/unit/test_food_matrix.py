@@ -8,6 +8,7 @@ from reinforcement_app.simulation.food_matrix import (
     heading_from_dxdy,
     distribute_signal_to_bins,
     compute_directional_signal,
+    get_random_danger_positions,
 )
 
 
@@ -26,6 +27,24 @@ def test_get_random_food_positions():
     ans2 = get_random_food_positions(10, 3, 42)
     for a1, a2 in zip(ans, ans2):
         assert a1 == a2
+
+
+def test_get_random_danger_positions():
+    """
+    Test Getting the random food positions
+    """
+    foods = get_random_food_positions(10, 3, 42)
+    ans = get_random_danger_positions(10, 3, foods, 42)
+    assert type(ans) is list
+    assert len(ans) == 3
+    for a in ans:
+        assert type(a) is tuple
+        assert len(a) == 2
+
+    ans2 = get_random_danger_positions(10, 3, foods, 42)
+    for a1, a2 in zip(ans, ans2):
+        assert a1 == a2
+
 
 
 def test_heading_from_dxdy():

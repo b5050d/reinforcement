@@ -5,14 +5,17 @@ The user can run this script to play the game
 """
 
 # Handle Imports
+from re import T
 import pygame
 from reinforcement_app.simulation.resources import sprite_path
 import sys
 from reinforcement_app.simulation.food_matrix import (
     get_random_food_positions,
+    get_random_danger_positions,
     compute_directional_signals,
 )
 from reinforcement_app.simulation.spatial_methods import find_euclidean_distance
+import numpy as np
 
 
 class Environment:
@@ -36,6 +39,8 @@ class Environment:
         self.last_state = None
 
         self.N_FOODS = self.config["N_FOODS"]
+        self.N_DANGERS = self.config["N_DANGERS"]
+        self.RANDOM_SEED = self.config["RANDOM_SEED"]
         self.RANDOM_TYPE = self.config["RANDOM_TYPE"]
         self.ARENA_SIZE = self.config["ARENA_SIZE"]
         self.PLAYER_SPEED = self.config["PLAYER_SPEED"]
@@ -63,6 +68,7 @@ class Environment:
         self.GREEN = (0, 200, 0)
         self.RED = (255, 0, 0)
         self.YELLOW = (255, 255, 0)
+        self.BLACK = (0, 0, 0)
 
         self.player_position = [self.ARENA_SIZE // 2, self.ARENA_SIZE // 2]
 
@@ -112,6 +118,12 @@ class Environment:
             render_pos = (f[0] * self.RENDER_MULT, f[1] * self.RENDER_MULT)
             pygame.draw.circle(self.screen, self.YELLOW, render_pos, 5)
 
+        # Now draw the dangers
+        for d in self.dangers:
+            render_pos = (d[0] * self.RENDER_MULT, d[1] * self.RENDER_MULT)
+            pygame.draw.circle(self.screen, self.BLACK, render_pos, 5)
+
+
         # Increment the clock
         self.clock.tick(self.FPS)
 
@@ -139,7 +151,13 @@ class Environment:
         # Reset the foods
         if self.RANDOM_TYPE == 0:
             # Load a fixed randomness
-            self.foods = get_random_food_positions(self.ARENA_SIZE, self.N_FOODS, 42)
+            if self.RANDOM_SEED != -1:
+                random_seed = self.RANDOM_SEED
+            else:
+                random_seed = np.random.randint(0, 10000)
+            self.foods = get_random_food_positions(self.ARENA_SIZE, self.N_FOODS, random_seed)
+            self.dangers = get_random_danger_positions(self.ARENA_SIZE, self.N_DANGERS, self.foods, random_seed)
+            # TODO - Make sure that the dangers do not appear in the same location as the foods.
         elif self.RANDOM_TYPE == 1:
             # Load a semi random
             pass
@@ -204,22 +222,30 @@ class Environment:
         # Perform action
         self.perform_action(action)
 
-        # Check if we have reached a food
-        foods = []
-        for f in self.foods:
-            dist = find_euclidean_distance(f, self.player_position)
-
+        # Check if we have reached a danger
+        done = False
+        for d in self.dangers:
+            dist = find_euclidean_distance(d, self.player_position)
             if dist <= self.PLAYER_RADIUS:
-                pass
-                reward += 50
-            else:
-                foods.append(f)
-        self.foods = foods
+                print("You lost the game! You fell into darkness and doom.")
+                reward += -50
+                done = True
 
-        if self.foods == []:
-            done = True
-        else:
-            done = False
+        if not done:
+            # Check if we have reached a food
+            foods = []
+            for f in self.foods:
+                dist = find_euclidean_distance(f, self.player_position)
+
+                if dist <= self.PLAYER_RADIUS:
+                    pass
+                    reward += 50
+                else:
+                    foods.append(f)
+            self.foods = foods
+
+            if self.foods == []:
+                done = True
 
         # Update Observation Space
         next_state = compute_directional_signals(self.player_position, self.foods)
@@ -315,10 +341,6 @@ class Environment:
             total_reward += reward
 
             self.update_game_rendering()
-
-            # Rendering Steps
-            for f in self.foods:
-                pass
 
             if done:
                 break
