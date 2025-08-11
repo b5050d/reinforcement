@@ -156,12 +156,7 @@ def training_loop(config, experiment_id):
                 DATABASE_PATH, experiment_id, replay_config, REPLAY_PATH
             )
 
-            model_id = add_model(
-                DATABASE_PATH,
-                experiment_id,
-                nnet,
-                MODEL_PATH
-            )
+            model_id = add_model(DATABASE_PATH, experiment_id, nnet, MODEL_PATH)
 
             add_evaluation_run(
                 DATABASE_PATH,
