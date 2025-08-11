@@ -33,57 +33,107 @@ def further_randomize_matrix():
     pass
 
 
-def get_random_food_positions(size, n_foods, seed):
+def get_random_food_positions(size, min_spacing, n_foods, seed):
     """
-    Build a list of 
+    Build a list of
     """
     assert size > 5
-    # Find the food
     np.random.seed(seed)
-    food_positions = []
+
+    positions = []
+    low_limit = int(size * 0.1)
+    up_limit = int(size * 0.9)
+
+    mid_range_lo = int(size * 0.4)
+    mid_range_hi = int(size * 0.6)
+
     for i in range(n_foods):
-        # Generate a new food position
-
         stop_condition = False
+        attempts = 0
         while not stop_condition:
             x = np.random.randint(0, size)
             y = np.random.randint(0, size)
-            
-            if (x,y) not in food_positions and (x,y) != (int(size/2), int(size/2)):
-                if x > max(1, int(size*.1)):
-                    if x < min(size-1, int(size*.9)):
-                        if y > max(1, int(size*.1)):
-                            if y < min(size-1, int(size*.9)):
-                                food_positions.append((x, y))
-                                stop_condition = True
-    return food_positions
+
+            proposed_pos = (x, y)
+
+            if proposed_pos in positions:
+                pass
+            elif min(proposed_pos) <= low_limit:
+                pass
+            elif max(proposed_pos) >= up_limit:
+                pass
+            elif (x >= mid_range_lo and x <= mid_range_hi) and (
+                y >= mid_range_lo and y <= mid_range_hi
+            ):
+                pass
+            else:
+                failed = False
+                # Check to see if its appropriate spacing
+                for p in positions:
+                    if find_euclidean_distance(p, proposed_pos) <= min_spacing:
+                        failed = True
+                if not failed:
+                    positions.append(proposed_pos)
+                    stop_condition = True
+
+            attempts += 1
+            if attempts > 1000:
+                raise Exception("Error, could not converge")
+
+    return positions
 
 
-def get_random_danger_positions(size, n_dangers, foods, seed):
-    """
-    
-    """
+def get_random_danger_positions(size, min_spacing, n_dangers, foods, seed):
+    """ """
     assert size > 5
-
     np.random.seed(seed)
-    danger_positions = []
-    for i in range(n_dangers):
-        # Generate a new food position
 
+    positions = []
+    low_limit = int(size * 0.1)
+    up_limit = int(size * 0.9)
+
+    mid_range_lo = int(size * 0.4)
+    mid_range_hi = int(size * 0.6)
+
+    for i in range(n_dangers):
         stop_condition = False
+        attempts = 0
         while not stop_condition:
             x = np.random.randint(0, size)
             y = np.random.randint(0, size)
-            
-            if (x,y) not in danger_positions and (x,y) != (int(size/2), int(size/2)):
-                if (x,y) not in foods:
-                    if x > max(1, int(size*.1)):
-                        if x < min(size-1, int(size*.9)):
-                            if y > max(1, int(size*.1)):
-                                if y < min(size-1, int(size*.9)):
-                                    danger_positions.append((x, y))
-                                    stop_condition = True
-    return danger_positions
+
+            proposed_pos = (x, y)
+
+            if proposed_pos in positions:
+                pass
+            if proposed_pos in foods:
+                pass
+            elif min(proposed_pos) <= low_limit:
+                pass
+            elif max(proposed_pos) >= up_limit:
+                pass
+            elif (x >= mid_range_lo and x <= mid_range_hi) and (
+                y >= mid_range_lo and y <= mid_range_hi
+            ):
+                pass
+            else:
+                failed = False
+                # Check to see if its appropriate spacing
+                for p in positions:
+                    if find_euclidean_distance(p, proposed_pos) <= min_spacing:
+                        failed = True
+                for p in foods:
+                    if find_euclidean_distance(p, proposed_pos) <= min_spacing:
+                        failed = True
+                if not failed:
+                    positions.append(proposed_pos)
+                    stop_condition = True
+
+            attempts += 1
+            if attempts > 1000:
+                raise Exception("Error, could not converge")
+
+    return positions
 
 
 def heading_from_dxdy(dx, dy):

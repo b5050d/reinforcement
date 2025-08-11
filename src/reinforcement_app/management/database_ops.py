@@ -29,7 +29,6 @@ def table_exists(db_path: str, table_name: str) -> bool:
         return cursor.fetchone() is not None
 
 
-# TODO - Add config to the experiment table...
 create_experiment_table_cmd = """
 CREATE TABLE IF NOT EXISTS Experiment (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

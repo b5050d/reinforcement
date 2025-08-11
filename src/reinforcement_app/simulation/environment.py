@@ -5,7 +5,6 @@ The user can run this script to play the game
 """
 
 # Handle Imports
-from re import T
 import pygame
 from reinforcement_app.simulation.resources import sprite_path
 import sys
@@ -41,7 +40,7 @@ class Environment:
         self.N_FOODS = self.config["N_FOODS"]
         self.N_DANGERS = self.config["N_DANGERS"]
         self.RANDOM_SEED = self.config["RANDOM_SEED"]
-        self.RANDOM_TYPE = self.config["RANDOM_TYPE"]
+        self.RANDOM_TYPE = 0
         self.ARENA_SIZE = self.config["ARENA_SIZE"]
         self.PLAYER_SPEED = self.config["PLAYER_SPEED"]
         self.FPS = self.config["FPS"]
@@ -123,7 +122,6 @@ class Environment:
             render_pos = (d[0] * self.RENDER_MULT, d[1] * self.RENDER_MULT)
             pygame.draw.circle(self.screen, self.BLACK, render_pos, 5)
 
-
         # Increment the clock
         self.clock.tick(self.FPS)
 
@@ -155,8 +153,16 @@ class Environment:
                 random_seed = self.RANDOM_SEED
             else:
                 random_seed = np.random.randint(0, 10000)
-            self.foods = get_random_food_positions(self.ARENA_SIZE, self.N_FOODS, random_seed)
-            self.dangers = get_random_danger_positions(self.ARENA_SIZE, self.N_DANGERS, self.foods, random_seed)
+            self.foods = get_random_food_positions(
+                self.ARENA_SIZE, int(self.PLAYER_RADIUS * 2), self.N_FOODS, random_seed
+            )
+            self.dangers = get_random_danger_positions(
+                self.ARENA_SIZE,
+                int(self.PLAYER_RADIUS * 2),
+                self.N_DANGERS,
+                self.foods,
+                random_seed,
+            )
             # TODO - Make sure that the dangers do not appear in the same location as the foods.
         elif self.RANDOM_TYPE == 1:
             # Load a semi random
@@ -167,7 +173,12 @@ class Environment:
         else:
             raise Exception("Error, unrecognized random type or not set")
 
-        return compute_directional_signals(self.player_position, self.foods)
+        next_state = compute_directional_signals(self.player_position, self.foods)
+        next_state.extend(
+            compute_directional_signals(self.player_position, self.dangers)
+        )
+
+        return next_state
 
     def perform_action(self, action):
         """
@@ -261,6 +272,11 @@ class Environment:
                 reward += -0.05  # Penalize sticking right next to the target
 
         self.last_state = next_state
+
+        next_state.extend(
+            compute_directional_signals(self.player_position, self.dangers)
+        )
+
         return next_state, reward, done
 
     def handle_keypresses(self):

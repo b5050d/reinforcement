@@ -16,35 +16,58 @@ def test_get_random_food_positions():
     """
     Test Getting the random food positions
     """
+    for i in range(10):
+        ans = get_random_food_positions(10, 1, 5, i)
+        assert type(ans) is list
+        assert len(ans) == 5
+        for a in ans:
+            assert type(a) is tuple
+            assert len(a) == 2
 
-    ans = get_random_food_positions(10, 3, 42)
-    assert type(ans) is list
-    assert len(ans) == 3
-    for a in ans:
-        assert type(a) is tuple
-        assert len(a) == 2
-
-    ans2 = get_random_food_positions(10, 3, 42)
-    for a1, a2 in zip(ans, ans2):
-        assert a1 == a2
+            assert 0 not in a
+            assert 9 not in a
+            assert a not in [
+                (4, 4),
+                (4, 5),
+                (4, 6),
+                (5, 4),
+                (5, 5),
+                (5, 6),
+                (6, 4),
+                (6, 5),
+                (6, 6),
+            ]
+            assert ans.count(a) == 1
 
 
 def test_get_random_danger_positions():
     """
     Test Getting the random food positions
     """
-    foods = get_random_food_positions(10, 3, 42)
-    ans = get_random_danger_positions(10, 3, foods, 42)
-    assert type(ans) is list
-    assert len(ans) == 3
-    for a in ans:
-        assert type(a) is tuple
-        assert len(a) == 2
+    foods = get_random_food_positions(10, 2, 3, 678)
 
-    ans2 = get_random_danger_positions(10, 3, foods, 42)
-    for a1, a2 in zip(ans, ans2):
-        assert a1 == a2
+    for i in range(10):
+        ans = get_random_danger_positions(10, 2, 3, foods, i)
+        assert type(ans) is list
+        assert len(ans) == 3
+        for a in ans:
+            assert type(a) is tuple
+            assert len(a) == 2
 
+            assert 0 not in a
+            assert 9 not in a
+            assert a not in [
+                (4, 4),
+                (4, 5),
+                (4, 6),
+                (5, 4),
+                (5, 5),
+                (5, 6),
+                (6, 4),
+                (6, 5),
+                (6, 6),
+            ]
+            assert ans.count(a) == 1
 
 
 def test_heading_from_dxdy():
